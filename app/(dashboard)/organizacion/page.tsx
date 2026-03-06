@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FileText,
   MapPin,
@@ -23,6 +23,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OrgEditSheet } from "@/feature/organization/components/org-edit-sheet";
+import { SedesSection } from "@/feature/organization/components/sedes-section";
+import { CargosSection } from "@/feature/organization/components/cargos-section";
+import { OrgStructureSection } from "@/feature/organization/components/org-structure-section";
+import { sedesApi } from "@/feature/organization/api/sedes";
 
 type OrgTab = "informacion" | "sedes" | "estructura" | "cargos";
 
@@ -41,18 +46,14 @@ type OrganizationDetails = {
   code?: string | null;
   nit?: string | null;
   sector?: string | null;
+  entityType?: string | null;
   slogan?: string | null;
   description?: string | null;
   legalRepresentative?: string | null;
   email?: string | null;
   phone?: string | null;
   website?: string | null;
-};
-
-type Sede = {
-  id: string;
-  name: string;
-  is_principal?: boolean | null;
+  logoUrl?: string | null;
 };
 
 const TABS: { key: OrgTab; label: string; icon: React.ReactNode }[] = [
@@ -64,6 +65,7 @@ const TABS: { key: OrgTab; label: string; icon: React.ReactNode }[] = [
 
 export default function OrganizacionPage() {
   const [activeTab, setActiveTab] = useState<OrgTab>("informacion");
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organization, setOrganization] = useState<OrganizationDetails | null>(
     null,
   );
@@ -72,94 +74,85 @@ export default function OrganizacionPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   const user = useAuthStore((s) => s.user);
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadOrganization = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data: list } = await api.get<OrganizationDto[]>(
+        "/api/v1/qualitas/foundation/organizations",
+      );
 
-    async function loadOrganization() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const { data: list } = await api.get<OrganizationDto[]>(
-          "/api/v1/qualitas/foundation/organizations",
-        );
-
-        if (!Array.isArray(list) || list.length === 0) {
-          if (!isMounted) return;
-          setOrganization(null);
-          setHasPrincipalSede(null);
-          setError("No hay organizaciones configuradas para el tenant actual.");
-          return;
-        }
-
-        const tenantCode = user?.tenant ?? "root";
-        const matched =
-          list.find((o) => o.code === tenantCode) ?? list[0] ?? null;
-
-        if (!matched) {
-          if (!isMounted) return;
-          setOrganization(null);
-          setHasPrincipalSede(null);
-          setError("No se encontró una organización para el tenant actual.");
-          return;
-        }
-
-        const { data: orgResponse } = await api.get<any>(
-          `/api/v1/qualitas/foundation/organizations/${matched.id}`,
-        );
-
-        const mapped: OrganizationDetails = {
-          id: orgResponse.id,
-          name: orgResponse.name ?? matched.name,
-          code: orgResponse.code ?? matched.code,
-          nit: orgResponse.nit ?? null,
-          sector: orgResponse.sector ?? null,
-          slogan: orgResponse.slogan ?? null,
-          description: orgResponse.description ?? null,
-          legalRepresentative:
-            orgResponse.legal_representative ?? orgResponse.legalRepresentative,
-          email: orgResponse.email ?? null,
-          phone: orgResponse.phone ?? null,
-          website: orgResponse.website ?? null,
-        };
-
-        let principal: boolean | null = null;
-
-        try {
-          const { data: sedes } = await api.get<Sede[]>(
-            `/api/v1/qualitas/foundation/organizations/${matched.id}/sedes`,
-          );
-          principal = Array.isArray(sedes)
-            ? sedes.some((s) => s.is_principal === true)
-            : null;
-        } catch {
-          principal = null;
-        }
-
-        if (!isMounted) return;
-        setOrganization(mapped);
-        setHasPrincipalSede(principal);
-      } catch {
-        if (!isMounted) return;
+      if (!Array.isArray(list) || list.length === 0) {
         setOrganization(null);
+        setOrganizationId(null);
         setHasPrincipalSede(null);
-        setError("No se pudo cargar la información de la organización.");
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setError("No hay organizaciones configuradas para el tenant actual.");
+        return;
       }
+
+      const tenantCode = user?.tenant ?? "root";
+      const matched =
+        list.find((o) => o.code === tenantCode) ?? list[0] ?? null;
+
+      if (!matched) {
+        setOrganization(null);
+        setOrganizationId(null);
+        setHasPrincipalSede(null);
+        setError("No se encontró una organización para el tenant actual.");
+        return;
+      }
+
+      const { data: orgResponse } = await api.get<any>(
+        `/api/v1/qualitas/foundation/organizations/${matched.id}`,
+      );
+
+      const mapped: OrganizationDetails = {
+        id: orgResponse.id,
+        name: orgResponse.name ?? matched.name,
+        code: orgResponse.code ?? matched.code,
+        nit: orgResponse.nit ?? null,
+        sector: orgResponse.sector ?? null,
+        entityType: orgResponse.entityType ?? null,
+        slogan: orgResponse.slogan ?? null,
+        description: orgResponse.description ?? null,
+        legalRepresentative:
+          orgResponse.legal_representative ?? orgResponse.legalRepresentative,
+        email: orgResponse.email ?? null,
+        phone: orgResponse.phone ?? null,
+        website: orgResponse.website ?? null,
+        logoUrl: orgResponse.logoUrl ?? null,
+      };
+
+      let principal: boolean | null = null;
+      try {
+        const units = await sedesApi.list(true);
+        principal = units.some(
+          (u) => u.organizationId === matched.id && u.isPrincipal === true
+        );
+      } catch {
+        principal = null;
+      }
+
+      setOrganizationId(matched.id);
+      setOrganization(mapped);
+      setHasPrincipalSede(principal);
+    } catch {
+      setOrganization(null);
+      setOrganizationId(null);
+      setHasPrincipalSede(null);
+      setError("No se pudo cargar la información de la organización.");
+    } finally {
+      setIsLoading(false);
     }
-
-    loadOrganization();
-
-    return () => {
-      isMounted = false;
-    };
   }, [user?.tenant]);
+
+  useEffect(() => {
+    loadOrganization();
+  }, [loadOrganization]);
 
   return (
     <section className="flex flex-col gap-4">
@@ -204,7 +197,13 @@ export default function OrganizacionPage() {
                   Información general de la entidad para reportes y encabezados.
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="shrink-0 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-2"
+                onClick={() => setEditSheetOpen(true)}
+                disabled={!organization}
+              >
                 <Pencil className="size-4" />
                 Editar Información
               </Button>
@@ -297,15 +296,25 @@ export default function OrganizacionPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 p-4 text-center">
-                        <ImageIcon className="mb-2 size-10 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          Click o arrastra una imagen
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Recomendado: PNG 500×500px
-                        </p>
-                      </div>
+                      {organization.logoUrl?.trim() ? (
+                        <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-border bg-muted/20 p-4">
+                          <img
+                            src={organization.logoUrl}
+                            alt="Logo de la entidad"
+                            className="max-h-40 max-w-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 p-4 text-center">
+                          <ImageIcon className="mb-2 size-10 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            No hay logo cargado
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Si no puedes subir imagen, ingresa la URL del logo en Editar información. Recomendado: PNG 500×500px
+                          </p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -404,23 +413,23 @@ export default function OrganizacionPage() {
         )}
 
         {activeTab === "sedes" && (
-          <div className="flex min-h-[320px] items-center justify-center p-8 text-muted-foreground">
-            <p className="text-sm">Contenido de Sedes en construcción.</p>
-          </div>
+          <SedesSection organizationId={organizationId} />
         )}
 
-        {activeTab === "estructura" && (
-          <div className="flex min-h-[320px] items-center justify-center p-8 text-muted-foreground">
-            <p className="text-sm">Contenido de Estructura en construcción.</p>
-          </div>
-        )}
+        {activeTab === "estructura" && <OrgStructureSection />}
 
-        {activeTab === "cargos" && (
-          <div className="flex min-h-[320px] items-center justify-center p-8 text-muted-foreground">
-            <p className="text-sm">Contenido de Cargos en construcción.</p>
-          </div>
-        )}
+        {activeTab === "cargos" && <CargosSection />}
       </div>
+
+      {organizationId && (
+        <OrgEditSheet
+          open={editSheetOpen}
+          onOpenChange={setEditSheetOpen}
+          organizationId={organizationId}
+          organization={organization}
+          onSaved={loadOrganization}
+        />
+      )}
     </section>
   );
 }

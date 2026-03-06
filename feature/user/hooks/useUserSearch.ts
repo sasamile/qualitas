@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { usersApi } from "../api/users";
 import type {
   PagedResponse,
@@ -29,7 +29,7 @@ export function useUserSearch(params: UserSearchParams) {
         items: enrichedItems,
       } as PagedResponse<UserWithOrg>;
     },
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 }
 

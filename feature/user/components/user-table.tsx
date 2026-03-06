@@ -15,7 +15,6 @@ interface UserTableProps {
   error?: Error | null;
   page: number;
   onPageChange: (page: number) => void;
-  onViewUser?: (user: UserWithOrg) => void;
   onEditUser?: (user: UserWithOrg) => void;
   onToggleActiveUser?: (user: UserWithOrg) => void;
 }
@@ -26,7 +25,6 @@ export function UserTable({
   error,
   page,
   onPageChange,
-  onViewUser,
   onEditUser,
   onToggleActiveUser,
 }: UserTableProps) {
@@ -173,11 +171,6 @@ export function UserTable({
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => onViewUser?.(user)}
-                        >
-                          Ver detalles
-                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => onEditUser?.(user)}
                         >
