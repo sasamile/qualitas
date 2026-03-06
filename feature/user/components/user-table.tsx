@@ -50,76 +50,77 @@ export function UserTable({
 
   if (isLoading) {
     return (
-      <div className="mt-4 rounded-lg border border-border bg-card">
-        {/* Cabecera de tabla */}
-        <div className="hidden border-b border-border/80 bg-muted/60 px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground md:block">
-          <div className="grid grid-cols-[minmax(0,2fr),minmax(0,1fr),minmax(0,1.2fr),minmax(0,1fr),minmax(0,1fr),minmax(0,1fr),auto] gap-4">
-            <span>Usuario / Email</span>
-            <span>Cargo</span>
-            <span>Área (dependencia)</span>
-            <span>Rol sistema</span>
-            <span>Estado</span>
-            <span>Último acceso</span>
-            <span className="text-right">Acciones</span>
-          </div>
+      <div className="mt-4 max-w-full rounded-lg border border-border bg-card">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[12%]" />
+              <col className="w-[16%]" />
+              <col className="w-[12%]" />
+              <col className="w-[10%]" />
+              <col className="w-[12%]" />
+              <col className="w-[16%]" />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-border/80 bg-muted/60 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-3 py-2.5">Usuario / Email</th>
+                <th className="px-3 py-2.5">Cargo</th>
+                <th className="px-3 py-2.5">Área</th>
+                <th className="px-3 py-2.5">Rol</th>
+                <th className="px-3 py-2.5">Estado</th>
+                <th className="px-3 py-2.5">Último acceso</th>
+                <th className="w-12 shrink-0 px-3 py-2.5 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
+                <tr
+                  key={i}
+                  className={
+                    i < SKELETON_ROWS - 1
+                      ? "border-b border-border/60"
+                      : ""
+                  }
+                >
+                  <td className="overflow-hidden px-3 py-2.5 align-middle">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
+                      <div className="min-w-0 flex-1 flex-col gap-1">
+                        <Skeleton className="mb-1 h-3.5 w-full max-w-24" />
+                        <Skeleton className="h-3 w-full max-w-32" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="overflow-hidden px-3 py-2.5 align-middle">
+                    <Skeleton className="h-3.5 w-full max-w-16" />
+                  </td>
+                  <td className="overflow-hidden px-3 py-2.5 align-middle">
+                    <Skeleton className="h-3.5 w-full max-w-20" />
+                  </td>
+                  <td className="overflow-hidden px-3 py-2.5 align-middle">
+                    <Skeleton className="h-5 w-full max-w-16 rounded-full" />
+                  </td>
+                  <td className="overflow-hidden px-3 py-2.5 align-middle">
+                    <Skeleton className="h-5 w-full max-w-14 rounded-full" />
+                  </td>
+                  <td className="overflow-hidden px-3 py-2.5 align-middle">
+                    <Skeleton className="h-3 w-full max-w-16" />
+                  </td>
+                  <td className="w-12 shrink-0 px-3 py-2.5 align-middle text-right">
+                    <Skeleton className="ml-auto h-7 w-7 shrink-0 rounded-full" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        {/* Filas skeleton responsivas (no se salen de la pantalla) */}
-        <div className="divide-y divide-border/60">
-          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
-            <div
-              key={i}
-              className="flex flex-col gap-3 px-4 py-3 md:grid md:grid-cols-[minmax(0,2fr),minmax(0,1fr),minmax(0,1.2fr),minmax(0,1fr),minmax(0,1fr),minmax(0,1fr),auto] md:items-center md:gap-4"
-            >
-              {/* Usuario / Email */}
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
-                <div className="flex flex-1 flex-col gap-1.5">
-                  <Skeleton className="h-4 w-32 max-w-full" />
-                  <Skeleton className="h-3 w-44 max-w-full" />
-                </div>
-              </div>
-
-              {/* Cargo */}
-              <div className="hidden md:block">
-                <Skeleton className="h-4 w-24 max-w-full" />
-              </div>
-
-              {/* Área */}
-              <div className="hidden md:block">
-                <Skeleton className="h-4 w-28 max-w-full" />
-              </div>
-
-              {/* Rol */}
-              <div className="hidden md:block">
-                <Skeleton className="h-5 w-20 max-w-full rounded-full" />
-              </div>
-
-              {/* Estado */}
-              <div className="hidden md:block">
-                <Skeleton className="h-5 w-16 max-w-full rounded-full" />
-              </div>
-
-              {/* Último acceso */}
-              <div className="hidden md:block">
-                <Skeleton className="h-3 w-20 max-w-full" />
-              </div>
-
-              {/* Acciones */}
-              <div className="flex justify-end md:justify-end">
-                <Skeleton className="h-8 w-8 rounded-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Pie de paginación skeleton */}
-        <div className="flex flex-col gap-2 border-t border-border/80 px-4 py-3 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <Skeleton className="h-4 w-40 max-w-full" />
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/80 px-3 py-2.5 text-xs text-muted-foreground">
+          <Skeleton className="h-3.5 w-28 max-w-full" />
           <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-20 rounded-md" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-8 w-20 rounded-md" />
+            <Skeleton className="h-7 w-16 rounded-md" />
+            <Skeleton className="hidden h-3.5 w-16 md:block" />
+            <Skeleton className="h-7 w-14 rounded-md" />
           </div>
         </div>
       </div>
