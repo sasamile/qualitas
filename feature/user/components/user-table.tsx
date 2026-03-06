@@ -7,7 +7,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MoreHorizontal } from "lucide-react";
+
+const SKELETON_ROWS = 10;
 
 interface UserTableProps {
   data?: PagedResponse<UserWithOrg>;
@@ -46,8 +49,70 @@ export function UserTable({
   };
   if (isLoading) {
     return (
-      <div className="mt-4 rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
-        Cargando usuarios...
+      <div className="mt-4 rounded-lg border border-border bg-card">
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
+            <thead>
+              <tr className="border-b border-border/80 bg-muted/60 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Usuario / Email</th>
+                <th className="px-4 py-3">Cargo</th>
+                <th className="px-4 py-3">Área (dependencia)</th>
+                <th className="px-4 py-3">Rol sistema</th>
+                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3">Último acceso</th>
+                <th className="px-4 py-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
+                <tr
+                  key={i}
+                  className={
+                    i < SKELETON_ROWS - 1
+                      ? "border-b border-border/60"
+                      : ""
+                  }
+                >
+                  <td className="px-4 py-3 align-middle">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+                      <div className="flex flex-col gap-1.5">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-44" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 align-middle">
+                    <Skeleton className="h-4 w-24" />
+                  </td>
+                  <td className="px-4 py-3 align-middle">
+                    <Skeleton className="h-4 w-28" />
+                  </td>
+                  <td className="px-4 py-3 align-middle">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3 align-middle">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3 align-middle">
+                    <Skeleton className="h-3 w-20" />
+                  </td>
+                  <td className="px-4 py-3 align-middle text-right">
+                    <Skeleton className="ml-auto h-8 w-8 rounded-full" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center justify-between border-t border-border/80 px-4 py-3 text-xs text-muted-foreground">
+          <Skeleton className="h-4 w-48" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-20 rounded-md" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-16 rounded-md" />
+          </div>
+        </div>
       </div>
     );
   }
