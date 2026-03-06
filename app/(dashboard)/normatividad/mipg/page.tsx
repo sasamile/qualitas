@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { MipgPanel } from "@/feature/compliance/components/normative/MipgPanel";
 
 export default function MIPGPage() {
   return (
@@ -11,11 +11,8 @@ export default function MIPGPage() {
           Gestión del Modelo Integrado de Planeación y Gestión (MIPG).
         </p>
       </div>
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
-          <p>Funcionalidad en desarrollo.</p>
-        </CardContent>
-      </Card>
+      
+      <MipgPanel />
     </div>
   );
 }

@@ -31,7 +31,7 @@ export async function getMipgGuidelineRequirements(
     return Array.isArray(data) ? data : [];
   } catch (error: unknown) {
     console.error("Error fetching MIPG guideline requirements:", error);
-    toast.error("Error al cargar relaciones MIPG-Requisitos");
+    // toast.error("Error al cargar relaciones MIPG-Requisitos");
     return [];
   }
 }

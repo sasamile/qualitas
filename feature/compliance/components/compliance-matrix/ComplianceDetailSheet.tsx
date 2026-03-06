@@ -14,7 +14,7 @@ import {
   GitBranch,
   FileText,
   AlertCircle,
-  Edit2,
+  Pen,
   Link2,
 } from "lucide-react";
 import type { ClauseRow } from "./ComplianceTable";
@@ -22,43 +22,47 @@ import type { ClauseRow } from "./ComplianceTable";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  data: ClauseRow | null;
-  frameworkName: string;
+  clause: ClauseRow | null;
+  frameworkName?: string;
   onEdit: () => void;
 }
 
 export function ComplianceDetailSheet({
   open,
   onOpenChange,
-  data,
-  frameworkName,
+  clause,
+  frameworkName = "ISO 9001",
   onEdit,
 }: Props) {
-  if (!data) return null;
+  if (!clause) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md flex flex-col">
-        <SheetHeader>
+      <SheetContent className="sm:max-w-md w-3/4 flex flex-col gap-4 p-6">
+        <SheetHeader className="space-y-2 text-center sm:text-left">
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {frameworkName} • Cláusula {data.number}
+            {frameworkName} • Cláusula {clause.number}
           </p>
-          <SheetTitle className="text-lg leading-tight">{data.title}</SheetTitle>
+          <SheetTitle className="text-lg leading-tight font-semibold text-foreground">
+            {clause.title}
+          </SheetTitle>
           <SheetDescription className="sr-only">
-            Detalle de cumplimiento para cláusula {data.number}
+            Detalle de cumplimiento para cláusula {clause.number}
           </SheetDescription>
-          <div className="pt-1">
-            <ComplianceStatusBadge status={data.status} />
+          <div className="pt-1 flex justify-center sm:justify-start">
+            <ComplianceStatusBadge status={clause.status} />
           </div>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto space-y-5 py-4">
           <section>
             <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase text-muted-foreground mb-2">
-              <CheckCircle2 className="h-3.5 w-3.5" /> ¿Cómo se cumple?
+              <CheckCircle2 className="h-3.5 w-3.5" /> Criterios de Cumplimiento
             </h4>
             <div className="rounded-lg border bg-background p-3 text-sm leading-relaxed text-foreground">
-              {data.how_it_complies ?? (
+              {clause.how_it_complies ? (
+                clause.how_it_complies
+              ) : (
                 <span className="text-muted-foreground italic">
                   Sin declaración registrada.
                 </span>
@@ -66,53 +70,51 @@ export function ComplianceDetailSheet({
             </div>
           </section>
 
-          {data.linked_processes.length > 0 && (
+          {clause.linked_processes.length > 0 && (
             <section className="rounded-lg border bg-background p-3">
               <div className="flex items-center gap-2 text-xs font-semibold mb-3">
                 <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />{" "}
                 Procesos Responsables
               </div>
               <div className="space-y-2">
-                {data.linked_processes.map((p) => (
+                {clause.linked_processes.map((p) => (
                   <div
                     key={p}
-                    className="flex items-center gap-2 text-sm text-primary cursor-pointer"
+                    className="flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline"
                   >
-                    <Link2 className="h-3.5 w-3.5" />{" "}
-                    <span className="underline">{p}</span>
+                    <Link2 className="h-3.5 w-3.5" /> {p}
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {data.linked_documents.length > 0 && (
+          {clause.linked_documents.length > 0 && (
             <section className="rounded-lg border bg-background p-3">
               <div className="flex items-center gap-2 text-xs font-semibold mb-3">
                 <FileText className="h-3.5 w-3.5 text-muted-foreground" />{" "}
                 Evidencia Documental
               </div>
               <div className="space-y-2">
-                {data.linked_documents.map((d) => (
+                {clause.linked_documents.map((d) => (
                   <div
                     key={d}
-                    className="flex items-center gap-2 text-sm text-primary cursor-pointer"
+                    className="flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline"
                   >
-                    <Link2 className="h-3.5 w-3.5" />{" "}
-                    <span className="underline">{d}</span>
+                    <Link2 className="h-3.5 w-3.5" /> {d}
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {data.findings_count > 0 && (
+          {clause.findings_count > 0 && (
             <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800 p-3">
               <div className="flex items-center gap-1.5 text-xs font-bold text-red-700 dark:text-red-400 mb-1">
                 <AlertCircle className="h-3.5 w-3.5" /> Atención Requerida
               </div>
               <p className="text-xs text-red-600 dark:text-red-300">
-                Existen <strong>{data.findings_count} Hallazgos</strong>{" "}
+                Existen <strong>{clause.findings_count} Hallazgos</strong>{" "}
                 abiertos asociados a esta cláusula.
               </p>
             </div>
@@ -124,7 +126,7 @@ export function ComplianceDetailSheet({
             Cerrar
           </Button>
           <Button onClick={onEdit} className="gap-1.5">
-            <Edit2 className="h-3.5 w-3.5" /> Editar Declaración
+            <Pen className="h-3.5 w-3.5" /> Editar Declaración
           </Button>
         </div>
       </SheetContent>

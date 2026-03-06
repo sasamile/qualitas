@@ -68,6 +68,16 @@ export function useMipgDimensionCreateMutation() {
   });
 }
 
+export function useMipgDimensionDeleteMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteMipgDimension(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mipgKeys.dimensions });
+    },
+  });
+}
+
 // --- Políticas ---
 
 export function useMipgPoliciesQuery(dimensionId?: string) {
@@ -97,8 +107,10 @@ export function useMipgGuidelinesQuery(policyId?: string) {
   return useQuery({
     queryKey: mipgKeys.guidelines(policyId),
     queryFn: async (): Promise<MipgGuidelineDto[]> => {
+      if (!policyId) return [];
       return await getAllMipgGuidelines(policyId);
     },
+    enabled: !!policyId,
   });
 }
 
@@ -126,6 +138,7 @@ export function useMipgAlignmentQuery(
     queryFn: async (): Promise<MipgGuidelineRequirementClauseDto[]> => {
       return await getMipgGuidelineRequirements(guidelineId, requirementId);
     },
+    enabled: !!guidelineId || !!requirementId,
   });
 }
 
@@ -136,10 +149,7 @@ export function useMipgAlignmentCreateMutation() {
       createMipgGuidelineRequirement(payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: mipgKeys.alignment(
-          variables.guidelineId,
-          variables.requirementClauseId
-        ),
+        queryKey: ["compliance", "mipg", "alignment", variables.guidelineId],
       });
     },
   });

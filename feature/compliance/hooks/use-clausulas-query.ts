@@ -41,6 +41,15 @@ export function useClausulasByMarcoQuery(marcoId: string | null) {
   });
 }
 
+export function useAllClausulasQuery() {
+  return useQuery({
+    queryKey: ["compliance", "clausulas", "all"],
+    queryFn: async (): Promise<ClausulaRequisitoDto[]> => {
+      return await getAllClausulasRequisitos(true);
+    },
+  });
+}
+
 export interface ClausulasDetailResult {
   clauses: ClausulaRequisitoDto[];
   criteria: CriterioCumplimientoDto[];

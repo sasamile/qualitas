@@ -11,12 +11,17 @@ import {
 } from "../../hooks/use-mipg-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MipgPolicyAddDialog } from "./MipgPolicyAddDialog";
+import { MipgPolicyDetailSheet } from "./MipgPolicyDetailSheet";
+import { MipgPreloadDialog } from "./MipgPreloadDialog";
+import type { MipgPolicyDto } from "../../api/mipg-politicas";
 
 export function MipgPanel() {
   const { data: dimensions = [], isLoading } = useMipgDimensionsQuery();
   const { data: allPolicies = [] } = useMipgPoliciesQuery();
   const { mutateAsync: createPolicy, isPending: isCreating } = useMipgPolicyCreateMutation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPreloadDialogOpen, setIsPreloadDialogOpen] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] = useState<MipgPolicyDto | null>(null);
 
   const handleCreatePolicy = async (data: {
     dimensionId: string;
@@ -102,6 +107,7 @@ export function MipgPanel() {
                         <div
                           key={policy.id}
                           className="border rounded-md p-3 flex items-start gap-3 bg-card hover:bg-accent/5 transition-colors cursor-pointer"
+                          onClick={() => setSelectedPolicy(policy)}
                         >
                           <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 border">
                             <span className="font-medium text-xs text-muted-foreground">
@@ -126,7 +132,11 @@ export function MipgPanel() {
       </div>
 
       <div className="flex justify-center">
-        <Button variant="outline" className="gap-2">
+        <Button 
+          variant="outline" 
+          className="gap-2"
+          onClick={() => setIsPreloadDialogOpen(true)}
+        >
           <Download className="h-4 w-4" />
           Precargar 7 dimensiones MIPG
         </Button>
@@ -138,6 +148,18 @@ export function MipgPanel() {
         dimensions={dimensions}
         onSubmit={handleCreatePolicy}
         saving={isCreating}
+      />
+
+      <MipgPreloadDialog
+        open={isPreloadDialogOpen}
+        onOpenChange={setIsPreloadDialogOpen}
+        existingDimensions={dimensions}
+      />
+
+      <MipgPolicyDetailSheet
+        open={!!selectedPolicy}
+        onOpenChange={(open) => !open && setSelectedPolicy(null)}
+        policy={selectedPolicy}
       />
     </div>
   );

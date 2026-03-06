@@ -25,15 +25,21 @@ export interface UpdateMipgGuidelineCommand {
   guidelineType: string;
 }
 
+const isValidGuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 /** GET /api/v1/qualitas/compliance/lineamientos-mipg */
 export async function getAllMipgGuidelines(policyId?: string): Promise<MipgGuidelineDto[]> {
   try {
+    if (policyId && !isValidGuid(policyId)) {
+      console.warn("Invalid policyId format:", policyId);
+      return [];
+    }
     const params = policyId ? { policyId } : undefined;
     const { data } = await api.get<MipgGuidelineDto[]>(BASE, { params });
     return Array.isArray(data) ? data : [];
   } catch (error: unknown) {
     console.error("Error fetching MIPG guidelines:", error);
-    toast.error("Error al cargar lineamientos MIPG");
+    // toast.error("Error al cargar lineamientos MIPG");
     return [];
   }
 }

@@ -54,11 +54,6 @@ export default function MarcosNormativosPage() {
             <span className="sm:hidden">Marcos</span>
           </TabsTrigger>
           
-          <TabsTrigger value="requisitos" className="gap-2 px-4">
-            <FileX className="h-4 w-4" />
-            <span className="hidden sm:inline">Requisitos</span>
-            <span className="sm:hidden">Requisitos</span>
-          </TabsTrigger>
           <TabsTrigger value="exclusiones" className="gap-2 px-4">
             <FileX className="h-4 w-4" />
             <span className="hidden sm:inline">Requisitos vs Exclusiones</span>
@@ -100,12 +95,6 @@ export default function MarcosNormativosPage() {
           </div>
         </TabsContent>
         
-        <TabsContent value="requisitos" className="border-none p-0 outline-none mt-0">
-             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                <p>Sección de Requisitos en construcción</p>
-             </div>
-        </TabsContent>
-
         <TabsContent value="exclusiones" className="border-none p-0 outline-none mt-0">
             <ExclusionsPanel />
         </TabsContent>

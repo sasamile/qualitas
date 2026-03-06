@@ -45,7 +45,6 @@ const navMainData = [
     icon: FileText,
     items: [
       { title: "Marcos Normativos", url: "/normatividad/marcos" },
-      { title: "MIPG", url: "/normatividad/mipg" },
       { title: "Cumplimiento", url: "/normatividad/cumplimiento" },
     ],
   },

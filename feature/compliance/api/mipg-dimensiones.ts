@@ -7,6 +7,7 @@ export interface MipgDimensionDto {
   id: string;
   number: number;
   name: string;
+  description?: string;
   colorHex: string;
   isTransversal: boolean;
 }
@@ -14,6 +15,7 @@ export interface MipgDimensionDto {
 export interface CreateMipgDimensionCommand {
   number: number;
   name: string;
+  description?: string;
   colorHex: string;
   isTransversal: boolean;
 }
@@ -21,6 +23,7 @@ export interface CreateMipgDimensionCommand {
 export interface UpdateMipgDimensionCommand {
   number: number;
   name: string;
+  description?: string;
   colorHex: string;
   isTransversal: boolean;
 }

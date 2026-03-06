@@ -114,7 +114,7 @@ export function ComplianceEditDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>¿Cómo se cumple?</Label>
+            <Label>Criterios de Cumplimiento</Label>
             <Textarea
               value={howItComplies}
               onChange={(e) => setHowItComplies(e.target.value)}

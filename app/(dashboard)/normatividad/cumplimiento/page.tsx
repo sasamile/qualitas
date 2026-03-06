@@ -84,6 +84,12 @@ export default function CumplimientoPage() {
     return result;
   }, [rows, search, statusFilter]);
 
+  const selectedFrameworkName = useMemo(() => {
+    return (
+      frameworks.find((f) => f.id === selectedFrameworkId)?.code ?? "Norma"
+    );
+  }, [frameworks, selectedFrameworkId]);
+
   const handleRowClick = (row: ClauseRow) => {
     setSelectedClause(row);
     setSheetOpen(true);
@@ -160,19 +166,19 @@ export default function CumplimientoPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-             {Object.entries(COMPLIANCE_STATUSES).map(([key, label]) => (
+             {COMPLIANCE_STATUSES.map((status) => (
               <DropdownMenuCheckboxItem
-                key={key}
-                checked={statusFilter.includes(key)}
+                key={status.value}
+                checked={statusFilter.includes(status.value)}
                 onCheckedChange={(checked) => {
                   setStatusFilter((prev) =>
                     checked
-                      ? [...prev, key]
-                      : prev.filter((k) => k !== key)
+                      ? [...prev, status.value]
+                      : prev.filter((k) => k !== status.value)
                   );
                 }}
               >
-                {label}
+                {status.label}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
@@ -194,15 +200,32 @@ export default function CumplimientoPage() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         clause={selectedClause}
+        frameworkName={selectedFrameworkName}
         onEdit={handleEditClick}
       />
 
       <ComplianceEditDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        clause={selectedClause}
+        clauseTitle={selectedClause?.title ?? ""}
+        clauseNumber={selectedClause?.number ?? ""}
+        initialData={
+          selectedClause
+            ? {
+                status: selectedClause.status,
+                how_it_complies: selectedClause.how_it_complies,
+                linked_processes: selectedClause.linked_processes,
+                linked_documents: selectedClause.linked_documents,
+              }
+            : {
+                status: "pendiente",
+                how_it_complies: "",
+                linked_processes: [],
+                linked_documents: [],
+              }
+        }
         onSave={handleSave}
-        isSaving={saving}
+        saving={saving}
       />
     </div>
   );
