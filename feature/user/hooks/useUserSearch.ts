@@ -30,7 +30,6 @@ export function useUserSearch(params: UserSearchParams) {
       } as PagedResponse<UserWithOrg>;
     },
     placeholderData: keepPreviousData,
-    placeholderData: keepPreviousData,
   });
 }
 
