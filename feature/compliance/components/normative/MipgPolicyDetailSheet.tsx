@@ -80,6 +80,7 @@ export function MipgPolicyDetailSheet({
             {policy.name}
           </SheetTitle>
           <SheetDescription>
+            {policy.description && <span className="block mb-2 italic">{policy.description}</span>}
             Entidad Rectora: {policy.rectorEntity}
           </SheetDescription>
         </SheetHeader>

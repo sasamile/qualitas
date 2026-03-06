@@ -8,6 +8,7 @@ export interface MipgPolicyDto {
   dimensionId: string;
   number: number;
   name: string;
+  description?: string;
   rectorEntity: string;
 }
 
@@ -15,6 +16,7 @@ export interface CreateMipgPolicyCommand {
   dimensionId: string;
   number: number;
   name: string;
+  description?: string;
   rectorEntity: string;
 }
 
@@ -22,6 +24,7 @@ export interface UpdateMipgPolicyCommand {
   dimensionId: string;
   number: number;
   name: string;
+  description?: string;
   rectorEntity: string;
 }
 

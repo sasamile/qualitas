@@ -31,8 +31,11 @@ import {
 import {
   getMipgGuidelineRequirements,
   createMipgGuidelineRequirement,
+  updateMipgGuidelineRequirement,
+  deleteMipgGuidelineRequirement,
   type MipgGuidelineRequirementClauseDto,
   type CreateMipgGuidelineRequirementClauseCommand,
+  type UpdateMipgGuidelineRequirementClauseCommand,
 } from "@/feature/compliance/api/mipg-alineacion";
 
 const mipgKeys = {
@@ -93,9 +96,10 @@ export function useMipgPolicyCreateMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateMipgPolicyCommand) => createMipgPolicy(payload),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
+      // Invalida todas las queries de políticas (con o sin dimensionId)
       queryClient.invalidateQueries({
-        queryKey: mipgKeys.policies(variables.dimensionId),
+        queryKey: ["compliance", "mipg", "policies"],
       });
     },
   });
@@ -103,12 +107,12 @@ export function useMipgPolicyCreateMutation() {
 
 // --- Lineamientos ---
 
-export function useMipgGuidelinesQuery(policyId?: string) {
+export function useMipgGuidelinesQuery(policyId?: string, includeInactive: boolean = false) {
   return useQuery({
-    queryKey: mipgKeys.guidelines(policyId),
+    queryKey: [...mipgKeys.guidelines(policyId), includeInactive],
     queryFn: async (): Promise<MipgGuidelineDto[]> => {
       if (!policyId) return [];
-      return await getAllMipgGuidelines(policyId);
+      return await getAllMipgGuidelines(policyId, includeInactive);
     },
     enabled: !!policyId,
   });
@@ -149,7 +153,37 @@ export function useMipgAlignmentCreateMutation() {
       createMipgGuidelineRequirement(payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["compliance", "mipg", "alignment", variables.guidelineId],
+        queryKey: mipgKeys.alignment(variables.mipgGuidelineId),
+      });
+    },
+  });
+}
+
+export function useMipgAlignmentUpdateMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateMipgGuidelineRequirementClauseCommand;
+    }) => updateMipgGuidelineRequirement(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["compliance", "mipg", "alignment"],
+      });
+    },
+  });
+}
+
+export function useMipgAlignmentDeleteMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteMipgGuidelineRequirement(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["compliance", "mipg", "alignment"],
       });
     },
   });

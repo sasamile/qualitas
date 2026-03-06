@@ -27,6 +27,7 @@ export function MipgPanel() {
     dimensionId: string;
     number: number;
     name: string;
+    description: string;
     rectorEntity: string;
   }) => {
     try {

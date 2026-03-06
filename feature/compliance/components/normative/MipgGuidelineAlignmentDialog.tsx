@@ -34,8 +34,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMipgAlignmentQuery, useMipgAlignmentCreateMutation } from "../../hooks/use-mipg-query";
+import { useMipgAlignmentQuery, useMipgAlignmentCreateMutation, useMipgAlignmentDeleteMutation } from "../../hooks/use-mipg-query";
 import { useAllClausulasQuery } from "../../hooks/use-clausulas-query";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
   open: boolean;
@@ -53,10 +54,12 @@ export function MipgGuidelineAlignmentDialog({
   const { data: alignments = [], isLoading: isLoadingAlignments } = useMipgAlignmentQuery(guidelineId);
   const { data: clauses = [], isLoading: isLoadingClauses } = useAllClausulasQuery();
   const { mutateAsync: createAlignment, isPending: isCreating } = useMipgAlignmentCreateMutation();
+  const { mutateAsync: deleteAlignment, isPending: isDeleting } = useMipgAlignmentDeleteMutation();
 
   const [selectedClauseId, setSelectedClauseId] = useState("");
   const [coveragePercentage, setCoveragePercentage] = useState("100");
-  const [relationType, setRelationType] = useState("Direct");
+  const [relationType, setRelationType] = useState("Fulfills");
+  const [integrationNotes, setIntegrationNotes] = useState("");
   const [openCombobox, setOpenCombobox] = useState(false);
 
   const handleAddAlignment = async () => {
@@ -64,23 +67,55 @@ export function MipgGuidelineAlignmentDialog({
 
     try {
       await createAlignment({
-        guidelineId,
+        mipgGuidelineId: guidelineId,
         requirementClauseId: selectedClauseId,
         relationType,
         coveragePercentage: Number(coveragePercentage),
+        integrationNotes: integrationNotes.trim() || null,
       });
       setSelectedClauseId("");
       setCoveragePercentage("100");
-      setRelationType("Direct");
+      setRelationType("Fulfills");
+      setIntegrationNotes("");
       setOpenCombobox(false);
     } catch (error) {
       console.error("Error adding alignment", error);
     }
   };
 
+  const handleDeleteAlignment = async (id: string) => {
+    if (confirm("¿Estás seguro de eliminar esta alineación?")) {
+      try {
+        await deleteAlignment(id);
+      } catch (error) {
+        console.error("Error deleting alignment", error);
+      }
+    }
+  };
+
   const getClauseLabel = (id: string) => {
     const clause = clauses.find((c) => c.id === id);
     return clause ? `${clause.clauseNumber} - ${clause.title}` : id;
+  };
+
+  const getRelationTypeLabel = (type: string) => {
+    switch (type) {
+      case "Fulfills": return "Cumple Totalmente";
+      case "Partial": return "Cumple Parcialmente";
+      case "Supports": return "Soporta";
+      case "Extends": return "Extiende";
+      default: return type;
+    }
+  };
+
+  const getRelationTypeColor = (type: string) => {
+    switch (type) {
+      case "Fulfills": return "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800";
+      case "Partial": return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800";
+      case "Supports": return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800";
+      case "Extends": return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800";
+      default: return "bg-slate-50 text-slate-700 border-slate-200";
+    }
   };
 
   return (
@@ -163,9 +198,10 @@ export function MipgGuidelineAlignmentDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Direct">Directa</SelectItem>
-                    <SelectItem value="Indirect">Indirecta</SelectItem>
-                    <SelectItem value="Reinforcement">Refuerzo</SelectItem>
+                    <SelectItem value="Fulfills">Cumple Totalmente</SelectItem>
+                    <SelectItem value="Partial">Cumple Parcialmente</SelectItem>
+                    <SelectItem value="Supports">Soporta</SelectItem>
+                    <SelectItem value="Extends">Extiende</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -178,6 +214,16 @@ export function MipgGuidelineAlignmentDialog({
                   max="100"
                   value={coveragePercentage}
                   onChange={(e) => setCoveragePercentage(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col space-y-1.5 sm:col-span-2">
+                <Label>Notas de Integración</Label>
+                <Textarea
+                  value={integrationNotes}
+                  onChange={(e) => setIntegrationNotes(e.target.value)}
+                  placeholder="Explique cómo se cumple el requisito..."
+                  className="h-20 resize-none"
                 />
               </div>
             </div>
@@ -207,27 +253,37 @@ export function MipgGuidelineAlignmentDialog({
               <div className="border rounded-md divide-y bg-card">
                 {alignments.map((alignment) => (
                   <div
-                    key={`${alignment.guidelineId}-${alignment.requirementClauseId}`}
-                    className="p-3 flex items-center justify-between text-sm hover:bg-muted/50 transition-colors"
+                    key={alignment.id}
+                    className="p-3 flex items-center justify-between text-sm hover:bg-muted/50 transition-colors group"
                   >
                     <div className="space-y-1">
                       <p className="font-medium text-foreground">
                         {getClauseLabel(alignment.requirementClauseId)}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         <span className={cn(
                           "px-1.5 py-0.5 rounded-sm border",
-                          alignment.relationType === "Direct" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800" :
-                          alignment.relationType === "Indirect" ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800" :
-                          "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                          getRelationTypeColor(alignment.relationType)
                         )}>
-                          {alignment.relationType === "Direct" ? "Directa" : 
-                           alignment.relationType === "Indirect" ? "Indirecta" : "Refuerzo"}
+                          {getRelationTypeLabel(alignment.relationType)}
                         </span>
                         <span>•</span>
                         <span>Cobertura: {alignment.coveragePercentage}%</span>
+                        {alignment.integrationNotes && (
+                          <span className="text-muted-foreground/80 italic">
+                            — {alignment.integrationNotes}
+                          </span>
+                        )}
                       </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDeleteAlignment(alignment.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>

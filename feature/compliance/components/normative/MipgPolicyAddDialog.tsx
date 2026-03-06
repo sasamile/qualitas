@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -28,6 +29,7 @@ interface Props {
     dimensionId: string;
     number: number;
     name: string;
+    description: string;
     rectorEntity: string;
   }) => void | Promise<void>;
   saving: boolean;
@@ -43,6 +45,7 @@ export function MipgPolicyAddDialog({
   const [dimensionId, setDimensionId] = useState("");
   const [number, setNumber] = useState<string>("");
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [rectorEntity, setRectorEntity] = useState("");
 
   useEffect(() => {
@@ -50,6 +53,7 @@ export function MipgPolicyAddDialog({
       setDimensionId("");
       setNumber("");
       setName("");
+      setDescription("");
       setRectorEntity("");
     }
   }, [open]);
@@ -61,6 +65,7 @@ export function MipgPolicyAddDialog({
       dimensionId,
       number: parseInt(number, 10),
       name: name.trim(),
+      description: description.trim(),
       rectorEntity: rectorEntity.trim(),
     });
   };
@@ -106,6 +111,16 @@ export function MipgPolicyAddDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: Gestión Estratégica del Talento Humano"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Descripción (Opcional)</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Breve descripción de la política..."
+              className="resize-none h-20"
             />
           </div>
 
