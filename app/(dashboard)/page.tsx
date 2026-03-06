@@ -5,8 +5,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   ClipboardList,
-  Zap,
-  FileWarning,
   TrendingUp,
   Network,
   Flame,
@@ -22,72 +20,81 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+/** 4 KPIs como en el mockup: icono + trend/pill arriba, label, valor grande, sub */
 const KPIS = [
   {
     title: "Cumplimiento Global",
-    value: "0%",
-    sub: "+5%",
-    subLabel: "vs mes anterior",
+    value: "84%",
+    sub: "Indicador consolidado de cumplimiento normativo.",
     icon: CheckCircle2,
+    trend: "+5% vs mes anterior",
+    trendStyle: "success",
     color: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-500/10 dark:bg-emerald-500/20",
   },
   {
     title: "Riesgos Críticos",
-    value: "0",
-    sub: "Requieren atención",
-    icon: AlertTriangle,
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-500/10 dark:bg-amber-500/20",
-  },
-  {
-    title: "Auditorías Abiertas",
     value: "12",
-    sub: "2 esta semana",
-    icon: ClipboardList,
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-500/10 dark:bg-blue-500/20",
-  },
-  {
-    title: "Acciones Activas",
-    value: "0",
-    sub: "0 pendientes",
-    icon: Zap,
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-500/10 dark:bg-violet-500/20",
-  },
-  {
-    title: "NC Abiertas",
-    value: "6",
-    sub: "+2",
-    subLabel: "nuevas",
-    icon: FileWarning,
+    sub: "Requieren atención inmediata del equipo.",
+    icon: AlertTriangle,
+    pill: "3 críticos",
+    pillStyle: "danger",
     color: "text-rose-600 dark:text-rose-400",
     bg: "bg-rose-500/10 dark:bg-rose-500/20",
   },
   {
+    title: "Auditorías Abiertas",
+    value: "08",
+    sub: "Seguimiento activo y planificadas.",
+    icon: ClipboardList,
+    pill: "2 esta semana",
+    pillStyle: "info",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10 dark:bg-blue-500/20",
+  },
+  {
     title: "Índice FURAG",
-    value: "82.4",
-    sub: "+3.1",
-    subLabel: "tendencia",
+    value: "91.2",
+    sub: "Mejora sostenida en desempeño institucional.",
     icon: TrendingUp,
-    color: "text-sky-600 dark:text-sky-400",
-    bg: "bg-sky-500/10 dark:bg-sky-500/20",
+    trend: "+3.1 tendencia",
+    trendStyle: "success",
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-500/10 dark:bg-amber-500/20",
   },
 ];
 
-/** Intensidad de riesgo por celda (impacto x probabilidad): 1=bajo, 5=extremo */
+const PILL_STYLES: Record<string, string> = {
+  success: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300",
+  warning: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
+  danger: "bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300",
+  info: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300",
+};
+
+/** Intensidad 1-5 por celda (impacto x probabilidad). Colores del mockup. */
 function heatLevel(row: number, col: number): number {
   return Math.max(1, Math.min(5, 6 - row + col - 1));
 }
 
 const HEAT_COLORS: Record<number, string> = {
-  1: "bg-emerald-400/70 dark:bg-emerald-500/40",
-  2: "bg-lime-400/70 dark:bg-lime-500/40",
-  3: "bg-amber-400/70 dark:bg-amber-500/40",
-  4: "bg-orange-400/70 dark:bg-orange-500/40",
-  5: "bg-rose-400/70 dark:bg-rose-500/40",
+  1: "bg-emerald-500 dark:bg-emerald-600",
+  2: "bg-lime-500 dark:bg-lime-600",
+  3: "bg-amber-500 dark:bg-amber-600",
+  4: "bg-orange-500 dark:bg-orange-600",
+  5: "bg-rose-500 dark:bg-rose-600",
 };
+
+const AUDITORIAS = [
+  { title: "Auditoría ISO 9001", meta: "Actualizado hace 2 horas", pill: "En revisión", pillStyle: "warning" as const },
+  { title: "Control interno financiero", meta: "3 hallazgos pendientes", pill: "Crítico", pillStyle: "danger" as const },
+  { title: "Evaluación normativa MIPG", meta: "Cierre estimado este viernes", pill: "En tiempo", pillStyle: "success" as const },
+];
+
+const ACCIONES = [
+  { title: "Se asignó acción correctiva a Gestión Documental", meta: "Hace 18 minutos", pill: "Nueva", pillStyle: "info" as const },
+  { title: "Se actualizó el indicador de cumplimiento global", meta: "Hace 1 hora", pill: "Actualizado", pillStyle: "success" as const },
+  { title: "Nuevo riesgo registrado en procesos críticos", meta: "Impacto alto / probabilidad media", pill: "Riesgo", pillStyle: "danger" as const },
+];
 
 export default function DashboardPage() {
   return (
@@ -101,8 +108,8 @@ export default function DashboardPage() {
         </p>
       </header>
 
-      {/* KPI cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* KPI cards - 4 columnas como en el mockup */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {KPIS.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -110,26 +117,35 @@ export default function DashboardPage() {
               key={kpi.title}
               className="overflow-hidden transition-shadow hover:shadow-md"
             >
-              <CardContent className="flex flex-row items-start gap-4 p-5">
-                <div
-                  className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${kpi.bg} ${kpi.color}`}
-                >
-                  <Icon className="size-5" />
+              <CardContent className="flex flex-col gap-4 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div
+                    className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${kpi.bg} ${kpi.color}`}
+                  >
+                    <Icon className="size-5" />
+                  </div>
+                  {kpi.trend && (
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                      {kpi.trend}
+                    </span>
+                  )}
+                  {kpi.pill && (
+                    <span
+                      className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${PILL_STYLES[kpi.pillStyle]}`}
+                    >
+                      {kpi.pill}
+                    </span>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1 space-y-1">
+                <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">
                     {kpi.title}
                   </p>
-                  <p className="text-2xl font-bold tracking-tight">
+                  <p className="text-3xl font-extrabold tracking-tight">
                     {kpi.value}
                   </p>
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span>{kpi.sub}</span>
-                    {kpi.subLabel && (
-                      <span className="text-muted-foreground/80">
-                        · {kpi.subLabel}
-                      </span>
-                    )}
+                  <p className="text-xs text-muted-foreground">
+                    {kpi.sub}
                   </p>
                 </div>
               </CardContent>
@@ -138,12 +154,12 @@ export default function DashboardPage() {
         })}
       </div>
 
+      {/* Estructura de Procesos + Mapa de Calor */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Estructura de Procesos */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="space-y-1.5">
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Network className="size-4 text-muted-foreground" />
                 Estructura de Procesos
               </CardTitle>
@@ -152,110 +168,166 @@ export default function DashboardPage() {
               </CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/procesos" className="gap-1">
-                Ver todo
+              <Link href="/procesos" className="gap-1 font-semibold text-primary">
+                Ver procesos
                 <ChevronRight className="size-4" />
               </Link>
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
-              <Network className="mx-auto size-10 text-muted-foreground/60" />
-              <p className="mt-2 text-sm font-medium text-foreground">
-                Sin procesos registrados
+            <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-gradient-to-b from-background to-muted/30 p-6 text-center">
+              <div className="text-4xl text-muted-foreground/60">◫</div>
+              <h4 className="mt-3 text-base font-semibold text-foreground">
+                Directorio central de procesos
+              </h4>
+              <p className="mt-1 max-w-[420px] text-sm text-muted-foreground">
+                Organiza procesos, responsables y planes de acción en una vista clara, accesible y lista para auditoría.
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Ve a{" "}
-                <Link
-                  href="/procesos"
-                  className="font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  Procesos
-                </Link>{" "}
-                o &quot;Plan de Acción&quot; para crear el primero.
-              </p>
-              <Button variant="outline" size="sm" className="mt-4" asChild>
-                <Link href="/procesos">Ir a Procesos</Link>
+              <Button className="mt-4 shadow-md" asChild>
+                <Link href="/procesos">Ir a procesos</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Mapa de Calor */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Flame className="size-4 text-muted-foreground" />
-              Mapa de Calor
-            </CardTitle>
-            <CardDescription>
-              Riesgo por impacto y probabilidad (Impacto ↑, Probabilidad →).
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="space-y-1.5">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Flame className="size-4 text-muted-foreground" />
+                Mapa de Calor
+              </CardTitle>
+              <CardDescription>
+                Riesgo por impacto y probabilidad.
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="#" className="gap-1 font-semibold text-primary">
+                Analizar
+                <ChevronRight className="size-4" />
+              </Link>
+            </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span>Impacto ↑</span>
-                <span>Probabilidad →</span>
-              </div>
-              <div className="grid grid-cols-5 gap-0.5" style={{ aspectRatio: "1" }}>
-                {[5, 4, 3, 2, 1].map((row) =>
-                  [1, 2, 3, 4, 5].map((col) => {
-                    const level = heatLevel(row, col);
-                    return (
-                      <div
-                        key={`${row}-${col}`}
-                        className={`flex items-center justify-center rounded-sm text-xs font-medium text-foreground/90 ${HEAT_COLORS[level]}`}
-                        title={`Impacto ${row}, Probabilidad ${col}`}
-                      >
-                        {level}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Impacto ↑</span>
+              <span>Probabilidad →</span>
+            </div>
+            <div className="mt-2 grid grid-cols-5 gap-1.5" style={{ aspectRatio: "1" }}>
+              {[5, 4, 3, 2, 1].map((row) =>
+                [1, 2, 3, 4, 5].map((col) => {
+                  const level = heatLevel(row, col);
+                  return (
+                    <div
+                      key={`${row}-${col}`}
+                      className={`flex items-center justify-center rounded-xl border-2 border-white font-bold text-foreground/90 shadow-sm transition-transform hover:scale-105 dark:border-border ${HEAT_COLORS[level]}`}
+                      title={`Impacto ${row}, Probabilidad ${col}`}
+                    >
+                      {level}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+              <span>Nivel de riesgo</span>
+              <div className="flex items-center gap-2">
                 <span>Bajo</span>
-                <span>Medio</span>
-                <span>Alto</span>
-                <span>Extremo</span>
+                <div
+                  className="h-2.5 w-36 rounded-full"
+                  style={{
+                    background: "linear-gradient(90deg, #16a34a 0%, #84cc16 32%, #f59e0b 60%, #f97316 78%, #dc2626 100%)",
+                  }}
+                />
+                <span>Crítico</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Acciones Recientes */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="space-y-1.5">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ListTodo className="size-4 text-muted-foreground" />
-              Acciones Recientes
-            </CardTitle>
-            <CardDescription>
-              Últimas acciones y tareas asignadas.
-            </CardDescription>
-          </div>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="#" className="gap-1">
-              Ver todas
-              <ChevronRight className="size-4" />
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
-            <ListTodo className="mx-auto size-10 text-muted-foreground/60" />
-            <p className="mt-2 text-sm font-medium text-foreground">
-              Sin acciones recientes
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Las acciones y tareas aparecerán aquí cuando existan.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Auditorías Prioritarias + Acciones Recientes */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="space-y-1.5">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ClipboardList className="size-4 text-muted-foreground" />
+                Auditorías Prioritarias
+              </CardTitle>
+              <CardDescription>
+                Seguimiento inmediato de auditorías activas.
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="#" className="gap-1 font-semibold text-primary">
+                Ver todo
+                <ChevronRight className="size-4" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-3">
+              {AUDITORIAS.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border p-3.5"
+                >
+                  <div>
+                    <p className="font-semibold text-foreground">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.meta}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-bold ${PILL_STYLES[item.pillStyle]}`}
+                  >
+                    {item.pill}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="space-y-1.5">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ListTodo className="size-4 text-muted-foreground" />
+                Acciones Recientes
+              </CardTitle>
+              <CardDescription>
+                Últimas tareas, alertas y movimientos del sistema.
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="#" className="gap-1 font-semibold text-primary">
+                Ver actividad
+                <ChevronRight className="size-4" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-3">
+              {ACCIONES.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border p-3.5"
+                >
+                  <div>
+                    <p className="font-semibold text-foreground">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.meta}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-bold ${PILL_STYLES[item.pillStyle]}`}
+                  >
+                    {item.pill}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </section>
   );
 }
