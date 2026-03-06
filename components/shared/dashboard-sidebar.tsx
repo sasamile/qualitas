@@ -159,7 +159,7 @@ export function DashboardSidebar({
       {/* Logo */}
       <div className="h-14 flex items-center gap-3 px-4 border-b border-border shrink-0">
         <Image
-          src="/icon/logo.png"
+          src="/icon/logo.svg"
           alt="Qualitas|Nexus"
           width={50}
           height={ 10}

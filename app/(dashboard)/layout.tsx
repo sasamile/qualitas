@@ -37,6 +37,9 @@ function getBreadcrumbs(pathname: string): { label: string; href?: string }[] {
   } else if (pathname.startsWith("/organizacion")) {
     crumbs.push({ label: "Administración" });
     crumbs.push({ label: "Organización" });
+  } else if (pathname.startsWith("/procesos")) {
+    crumbs.push({ label: "Control" });
+    crumbs.push({ label: "Procesos" });
   } else if (pathname.startsWith("/normatividad")) {
     crumbs.push({ label: "Normatividad" });
     if (pathname.includes("/marcos")) {

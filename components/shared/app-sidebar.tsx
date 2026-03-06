@@ -53,7 +53,9 @@ const navMainData = [
     title: "Control",
     url: "/auditoria",
     icon: Zap,
-    items: [{ title: "Auditoría", url: "/auditoria" }],
+    items: [
+      { title: "Procesos", url: "/procesos" },
+    ],
   },
 ];
 
@@ -77,9 +79,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground overflow-hidden">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground overflow-hidden">
                   <Image
-                    src="/icon/logo.png"
+                    src="/icon/logo.svg"
                     alt="Qualitas|Nexus"
                     width={32}
                     height={32}
@@ -87,7 +89,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-medium">Qualitas|Nexus</span>
+                  <span className="font-bold">Qualitas</span>
                   <span className="text-xs text-muted-foreground">v1.0.0</span>
                 </div>
               </Link>
