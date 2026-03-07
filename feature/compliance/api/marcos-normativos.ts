@@ -1,5 +1,6 @@
 import { api } from "@/lib/axios";
 import toast from "react-hot-toast";
+import type { ClausulaRequisitoDto } from "./clausulas-requisitos";
 
 const BASE = "/api/v1/qualitas/compliance/marcos-normativos";
 
@@ -100,5 +101,22 @@ export async function deleteMarcoNormativo(id: string): Promise<boolean> {
     console.error("Error deleting marco normativo:", error);
     toast.error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Error al eliminar marco normativo");
     return false;
+  }
+}
+
+/** GET /api/v1/qualitas/compliance/marcos-normativos/{frameworkId}/requirements */
+export async function getRequirementsByFramework(
+  frameworkId: string,
+  includeInactive: boolean = false
+): Promise<ClausulaRequisitoDto[]> {
+  try {
+    const { data } = await api.get<ClausulaRequisitoDto[]>(`${BASE}/${frameworkId}/requirements`, {
+      params: { includeInactive },
+    });
+    return Array.isArray(data) ? data : [];
+  } catch (error: unknown) {
+    console.error("Error fetching requirements by framework:", error);
+    toast.error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Error al cargar requisitos del marco");
+    return [];
   }
 }

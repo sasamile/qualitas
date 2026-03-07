@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, FileX, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, FileX, CheckCircle2, Loader2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -13,23 +13,143 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ExclusionAddDialog } from "./ExclusionAddDialog";
+import { useMarcosNormativosQuery } from "@/feature/compliance/hooks/use-marcos-normativos-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getRequirementsByFramework } from "@/feature/compliance/api/marcos-normativos";
+import { 
+  disassociateRequirementFromFramework,
+  associateRequirementToFrameworks
+} from "@/feature/compliance/api/clausulas-requisitos";
 
 export function ExclusionsPanel() {
-  const [exclusions, setExclusions] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | "excluded" | "active">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const queryClient = useQueryClient();
 
-  const handleAddExclusion = (data: any) => {
-    const newExclusion = {
-      id: crypto.randomUUID(),
-      clause_number: data.clauseNumber,
-      clause_title: data.clauseTitle,
-      framework_name: data.frameworkName,
+  // 1. Obtener todos los marcos
+  const { data: frameworks = [], isLoading: isLoadingFrameworks } = useMarcosNormativosQuery(true);
+
+  // 2. Obtener requisitos de todos los marcos para tener una vista global
+  const { data: allRequirements = [], isLoading: isLoadingRequirements } = useQuery({
+    queryKey: ["compliance", "all-framework-requirements", frameworks.map(f => f.id).join(",")],
+    queryFn: async () => {
+      if (frameworks.length === 0) return [];
+      
+      const results: any[] = [];
+      // Procesar en lotes para evitar sobrecargar el servidor (429 Too Many Requests)
+      const batchSize = 3;
+      
+      for (let i = 0; i < frameworks.length; i += batchSize) {
+        const batch = frameworks.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (fw) => {
+          try {
+            const [reqsAll, reqsActive] = await Promise.all([
+              getRequirementsByFramework(fw.id, true),
+              getRequirementsByFramework(fw.id, false)
+            ]);
+
+            const activeIds = new Set(reqsActive.map(r => r.id));
+
+            return reqsAll.map(r => ({
+              id: `${r.id}-${fw.id}`,
+              requirementId: r.id,
+              clauseNumber: r.clauseNumber,
+              clauseTitle: r.title,
+              frameworkId: fw.id,
+              frameworkName: fw.name,
+              isActive: activeIds.has(r.id),
+            }));
+          } catch (e) {
+            console.error(`Error loading requirements for framework ${fw.id}`, e);
+            return [];
+          }
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+      }
+
+      return results.flat();
+    },
+    enabled: frameworks.length > 0,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  const isLoading = isLoadingFrameworks || isLoadingRequirements;
+
+  // Filtrado
+  const filteredItems = useMemo(() => {
+    return allRequirements.filter(item => {
+      if (filter === "all") return true;
+      if (filter === "excluded") return !item.isActive;
+      if (filter === "active") return item.isActive;
+      return true;
+    });
+  }, [allRequirements, filter]);
+
+  // Paginación
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Mutación para gestionar estado (excluir o activar)
+  const manageStatusMutation = useMutation({
+    mutationFn: async (data: {
+      frameworkId: string;
+      clauseId: string;
+      justification: string;
+      status: "aplica" | "excluido";
+    }) => {
+      if (data.status === "excluido") {
+        return await disassociateRequirementFromFramework(
+          data.clauseId,
+          data.frameworkId,
+          {
+            deactivationReason: data.justification,
+            deactivatedBy: "Usuario Actual", // TODO: Obtener del contexto de auth
+            approvedBy: null
+          }
+        );
+      } else {
+        // Para "Aplica", usamos el endpoint de asociar (que reactiva si ya existe)
+        return await associateRequirementToFrameworks(
+          data.clauseId,
+          {
+             regulatoryFrameworkIds: [data.frameworkId]
+          }
+        );
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["compliance", "all-framework-requirements"] });
+      queryClient.invalidateQueries({ queryKey: ["compliance", "marcos-normativos"] });
+      setIsDialogOpen(false);
+    }
+  });
+
+  const handleManageStatus = async (data: any) => {
+    await manageStatusMutation.mutateAsync({
+      frameworkId: data.frameworkId,
+      clauseId: data.clauseId,
       justification: data.justification,
-      status: "excluido",
-    };
-    setExclusions([...exclusions, newExclusion]);
-    setIsDialogOpen(false);
+      status: data.status
+    });
   };
 
   return (
@@ -41,84 +161,137 @@ export function ExclusionsPanel() {
               Declaración de Aplicabilidad (Exclusiones)
             </h3>
             <p className="text-sm text-muted-foreground">
-              Justifique los requisitos normativos que no aplican a la
-              organización.
+              Gestione qué requisitos aplican y cuáles se excluyen de cada marco normativo.
             </p>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5 shrink-0"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Plus className="h-4 w-4" /> Registrar Exclusión
-          </Button>
+          
+          <div className="flex gap-2">
+             <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  {filter === "all" ? "Todos" : filter === "excluded" ? "Excluidos" : "Aplican"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Filtrar por estado</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setFilter("all")}>Todos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("active")}>Aplica (Activos)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("excluded")}>Excluidos</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 shrink-0"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" /> Gestionar Estado
+            </Button>
+          </div>
         </div>
 
-        {exclusions.length === 0 ? (
+        {isLoading ? (
+           <div className="flex justify-center p-8">
+             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+           </div>
+        ) : filteredItems.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            No hay exclusiones registradas. Todos los requisitos aplican.
+            No se encontraron registros.
           </p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cláusula / Requisito</TableHead>
-                <TableHead>Marco</TableHead>
-                <TableHead>Justificación de Exclusión</TableHead>
-                <TableHead>Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {exclusions.map((ex) => (
-                <TableRow key={ex.id}>
-                  <TableCell>
-                    <span className="font-bold font-mono text-xs">
-                      {ex.clause_number}
-                    </span>
-                    <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                      {ex.clause_title}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="text-[11px]">
-                      {ex.framework_name}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[300px]">
-                    {ex.justification ??
-                      (ex.status === "aplica" ? (
-                        <span className="italic">
-                          Aplica para toda la organización.
+          <div className="space-y-4">
+            <div className="relative w-full overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cláusula / Requisito</TableHead>
+                  <TableHead>Marco</TableHead>
+                  <TableHead>Justificación / Estado</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedItems.map((item) => (
+                  <TableRow key={item.id} className={!item.isActive ? "bg-red-50/10" : ""}>
+                    <TableCell>
+                      <span className="font-bold font-mono text-xs block">
+                        {item.clauseNumber}
+                      </span>
+                      <div className="text-xs text-muted-foreground truncate max-w-[300px]" title={item.clauseTitle}>
+                        {item.clauseTitle}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[11px]">
+                        {item.frameworkName}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[300px]">
+                       {!item.isActive ? (
+                        <span className="text-muted-foreground italic">
+                           Excluido (Ver justificación en auditoría)
                         </span>
                       ) : (
-                        "—"
-                      ))}
-                  </TableCell>
-                  <TableCell>
-                    {ex.status === "excluido" ? (
-                      <Badge
-                        variant="destructive"
-                        className="gap-1 text-[11px]"
-                      >
-                        <FileX className="h-3 w-3" /> EXCLUIDO
-                      </Badge>
-                    ) : (
-                      <Badge className="gap-1 text-[11px] bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
-                        <CheckCircle2 className="h-3 w-3" /> APLICA
-                      </Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                        <span className="italic text-green-600/70">
+                          Aplica para toda la organización.
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {!item.isActive ? (
+                        <Badge
+                          variant="destructive"
+                          className="gap-1 text-[11px]"
+                        >
+                          <FileX className="h-3 w-3" /> EXCLUIDO
+                        </Badge>
+                      ) : (
+                        <Badge className="gap-1 text-[11px] bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
+                          <CheckCircle2 className="h-3 w-3" /> APLICA
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            </div>
+            
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm flex items-center">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            )}
+          </div>
         )}
 
         <ExclusionAddDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-          onSubmit={handleAddExclusion}
+          onSubmit={handleManageStatus}
+          saving={manageStatusMutation.isPending}
         />
       </CardContent>
     </Card>

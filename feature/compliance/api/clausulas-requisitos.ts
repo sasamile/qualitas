@@ -109,3 +109,44 @@ export async function deleteClausulaRequisito(id: string): Promise<boolean> {
     return false;
   }
 }
+
+/** POST /api/v1/qualitas/compliance/clausulas-requisitos/{requirementId}/frameworks */
+export async function associateRequirementToFrameworks(
+  requirementId: string,
+  payload: { regulatoryFrameworkIds: string[] }
+): Promise<boolean> {
+  try {
+    await api.post(`${BASE}/${requirementId}/frameworks`, payload);
+    toast.success("Marcos normativos asociados exitosamente");
+    return true;
+  } catch (error: unknown) {
+    console.error("Error associating requirement:", error);
+    toast.error(
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Error al asociar el requisito"
+    );
+    return false;
+  }
+}
+
+/** DELETE /api/v1/qualitas/compliance/clausulas-requisitos/{requirementId}/frameworks/{frameworkId} */
+export async function disassociateRequirementFromFramework(
+  requirementId: string,
+  frameworkId: string,
+  payload: { deactivationReason: string; deactivatedBy: string; approvedBy?: string | null }
+): Promise<boolean> {
+  try {
+    await api.delete(`${BASE}/${requirementId}/frameworks/${frameworkId}`, {
+      data: payload,
+    });
+    toast.success("Requisito excluido correctamente");
+    return true;
+  } catch (error: unknown) {
+    console.error("Error disassociating requirement:", error);
+    toast.error(
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Error al excluir el requisito"
+    );
+    return false;
+  }
+}

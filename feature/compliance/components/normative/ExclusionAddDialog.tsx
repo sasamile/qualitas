@@ -32,6 +32,7 @@ interface Props {
     frameworkName: string;
     clauseNumber: string;
     clauseTitle: string;
+    status: "aplica" | "excluido";
   }) => void | Promise<void>;
   saving?: boolean;
 }
@@ -50,6 +51,7 @@ export function ExclusionAddDialog({
   const [frameworkId, setFrameworkId] = useState("");
   const [clauseId, setClauseId] = useState("");
   const [justification, setJustification] = useState("");
+  const [status, setStatus] = useState<"aplica" | "excluido">("excluido");
 
   useEffect(() => {
     if (open) {
@@ -57,12 +59,15 @@ export function ExclusionAddDialog({
       setFrameworkId("");
       setClauseId("");
       setJustification("");
+      setStatus("excluido");
       setClauses([]);
     }
   }, [open]);
 
   useEffect(() => {
     if (frameworkId) {
+      // Cargar todas las cláusulas (incluso inactivas/excluidas) para poder reactivarlas si se selecciona "Aplica"
+      // O para excluirlas si se selecciona "Excluido"
       loadClauses(frameworkId);
       setClauseId("");
     } else {
@@ -86,7 +91,10 @@ export function ExclusionAddDialog({
   const loadClauses = async (fwId: string) => {
     setLoadingClauses(true);
     try {
-      const data = await getAllClausulasRequisitos(false, fwId);
+      // Cargamos includeInactive=true para ver todo lo que pertenece al marco
+      // Esto permite seleccionar algo que ya está excluido para volverlo a "Aplica"
+      // O seleccionar algo activo para pasarlo a "Excluido"
+      const data = await getAllClausulasRequisitos(true, fwId);
       setClauses(data);
     } catch (error) {
       console.error(error);
@@ -97,7 +105,13 @@ export function ExclusionAddDialog({
   };
 
   const handleSubmit = () => {
-    if (!frameworkId || !clauseId || !justification.trim()) return;
+    if (!frameworkId || !clauseId) return;
+    
+    // Si es excluido, la justificación es obligatoria
+    if (status === "excluido" && !justification.trim()) {
+        toast.error("La justificación es obligatoria para exclusiones");
+        return;
+    }
 
     const selectedFramework = frameworks.find((f) => f.id === frameworkId);
     const selectedClause = clauses.find((c) => c.id === clauseId);
@@ -111,6 +125,7 @@ export function ExclusionAddDialog({
       frameworkName: selectedFramework.name,
       clauseNumber: selectedClause.clauseNumber,
       clauseTitle: selectedClause.title,
+      status,
     });
   };
 
@@ -118,7 +133,7 @@ export function ExclusionAddDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Registrar Exclusión</DialogTitle>
+          <DialogTitle>Gestionar Estado de Requisito</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
@@ -155,6 +170,7 @@ export function ExclusionAddDialog({
                 {clauses.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.clauseNumber} - {c.title}
+                    {!c.isActive && " (Excluido)"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -162,15 +178,34 @@ export function ExclusionAddDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Justificación de Exclusión</Label>
-            <Textarea
-              value={justification}
-              onChange={(e) => setJustification(e.target.value)}
-              placeholder="Explique por qué este requisito no aplica a la organización..."
-              rows={4}
+            <Label>Estado</Label>
+            <Select
+              value={status}
+              onValueChange={(val) => setStatus(val as "aplica" | "excluido")}
               disabled={saving}
-            />
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aplica">Aplica</SelectItem>
+                <SelectItem value="excluido">Excluido</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {status === "excluido" && (
+            <div className="space-y-2">
+              <Label>Justificación de Exclusión</Label>
+              <Textarea
+                value={justification}
+                onChange={(e) => setJustification(e.target.value)}
+                placeholder="Explique por qué este requisito no aplica a la organización..."
+                rows={4}
+                disabled={saving}
+              />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button
@@ -183,10 +218,10 @@ export function ExclusionAddDialog({
           <Button
             onClick={handleSubmit}
             disabled={
-              saving || !frameworkId || !clauseId || !justification.trim()
+              saving || !frameworkId || !clauseId || (status === "excluido" && !justification.trim())
             }
           >
-            {saving ? "Guardando..." : "Registrar"}
+            {saving ? "Guardando..." : "Guardar"}
           </Button>
         </DialogFooter>
       </DialogContent>
