@@ -56,8 +56,8 @@ export default function MarcosNormativosPage() {
           
           <TabsTrigger value="exclusiones" className="gap-2 px-4">
             <FileX className="h-4 w-4" />
-            <span className="hidden sm:inline">Requisitos vs Exclusiones</span>
-            <span className="sm:hidden">Exclusiones</span>
+            <span className="hidden sm:inline">Declaración de Aplicabilidad</span>
+            <span className="sm:hidden">Aplicabilidad</span>
           </TabsTrigger>
           <TabsTrigger value="mipg" className="gap-2 px-4">
             <Scale className="h-4 w-4" />

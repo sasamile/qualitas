@@ -32,7 +32,7 @@ interface Props {
     frameworkName: string;
     clauseNumber: string;
     clauseTitle: string;
-    status: "aplica" | "excluido";
+    status: "Aplica" | "No aplica";
   }) => void | Promise<void>;
   saving?: boolean;
 }
@@ -51,7 +51,7 @@ export function ExclusionAddDialog({
   const [frameworkId, setFrameworkId] = useState("");
   const [clauseId, setClauseId] = useState("");
   const [justification, setJustification] = useState("");
-  const [status, setStatus] = useState<"aplica" | "excluido">("excluido");
+  const [status, setStatus] = useState<"Aplica" | "No aplica">("No aplica");
 
   useEffect(() => {
     if (open) {
@@ -59,7 +59,7 @@ export function ExclusionAddDialog({
       setFrameworkId("");
       setClauseId("");
       setJustification("");
-      setStatus("excluido");
+      setStatus("No aplica");
       setClauses([]);
     }
   }, [open]);
@@ -108,8 +108,8 @@ export function ExclusionAddDialog({
     if (!frameworkId || !clauseId) return;
     
     // Si es excluido, la justificación es obligatoria
-    if (status === "excluido" && !justification.trim()) {
-        toast.error("La justificación es obligatoria para exclusiones");
+    if (status === "No aplica" && !justification.trim()) {
+        toast.error("La justificación es obligatoria cuando no aplica");
         return;
     }
 
@@ -133,7 +133,7 @@ export function ExclusionAddDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Gestionar Estado de Requisito</DialogTitle>
+          <DialogTitle>Declaración de Aplicabilidad</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
@@ -181,22 +181,22 @@ export function ExclusionAddDialog({
             <Label>Estado</Label>
             <Select
               value={status}
-              onValueChange={(val) => setStatus(val as "aplica" | "excluido")}
+              onValueChange={(val) => setStatus(val as "Aplica" | "No aplica")}
               disabled={saving}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="aplica">Aplica</SelectItem>
-                <SelectItem value="excluido">Excluido</SelectItem>
+                <SelectItem value="Aplica">Aplica</SelectItem>
+                <SelectItem value="No aplica">No aplica</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {status === "excluido" && (
+          {status === "No aplica" && (
             <div className="space-y-2">
-              <Label>Justificación de Exclusión</Label>
+              <Label>Justificación de No Aplicabilidad</Label>
               <Textarea
                 value={justification}
                 onChange={(e) => setJustification(e.target.value)}
@@ -218,7 +218,7 @@ export function ExclusionAddDialog({
           <Button
             onClick={handleSubmit}
             disabled={
-              saving || !frameworkId || !clauseId || (status === "excluido" && !justification.trim())
+              saving || !frameworkId || !clauseId || (status === "No aplica" && !justification.trim())
             }
           >
             {saving ? "Guardando..." : "Guardar"}

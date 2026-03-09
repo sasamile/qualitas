@@ -114,9 +114,9 @@ export function ExclusionsPanel() {
       frameworkId: string;
       clauseId: string;
       justification: string;
-      status: "aplica" | "excluido";
+      status: "Aplica" | "No aplica";
     }) => {
-      if (data.status === "excluido") {
+      if (data.status === "No aplica") {
         return await disassociateRequirementFromFramework(
           data.clauseId,
           data.frameworkId,
@@ -158,10 +158,10 @@ export function ExclusionsPanel() {
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <h3 className="text-base font-bold">
-              Declaración de Aplicabilidad (Exclusiones)
+              Declaración de Aplicabilidad
             </h3>
             <p className="text-sm text-muted-foreground">
-              Gestione qué requisitos aplican y cuáles se excluyen de cada marco normativo.
+              Gestione la aplicabilidad de los requisitos normativos.
             </p>
           </div>
           
@@ -170,15 +170,15 @@ export function ExclusionsPanel() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Filter className="h-4 w-4" />
-                  {filter === "all" ? "Todos" : filter === "excluded" ? "Excluidos" : "Aplican"}
+                  {filter === "all" ? "Todos" : filter === "excluded" ? "No Aplica" : "Aplica"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Filtrar por estado</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setFilter("all")}>Todos</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter("active")}>Aplica (Activos)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter("excluded")}>Excluidos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("active")}>Aplica</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("excluded")}>No Aplica</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -188,7 +188,7 @@ export function ExclusionsPanel() {
               className="gap-1.5 shrink-0"
               onClick={() => setIsDialogOpen(true)}
             >
-              <Plus className="h-4 w-4" /> Gestionar Estado
+              <Plus className="h-4 w-4" /> Gestionar Aplicabilidad
             </Button>
           </div>
         </div>
@@ -209,13 +209,13 @@ export function ExclusionsPanel() {
                 <TableRow>
                   <TableHead>Cláusula / Requisito</TableHead>
                   <TableHead>Marco</TableHead>
-                  <TableHead>Justificación / Estado</TableHead>
+                  <TableHead>Justificación</TableHead>
                   <TableHead>Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedItems.map((item) => (
-                  <TableRow key={item.id} className={!item.isActive ? "bg-red-50/10" : ""}>
+                  <TableRow key={item.id} className={!item.isActive ? "bg-muted/30" : ""}>
                     <TableCell>
                       <span className="font-bold font-mono text-xs block">
                         {item.clauseNumber}
@@ -232,7 +232,7 @@ export function ExclusionsPanel() {
                     <TableCell className="text-xs text-muted-foreground max-w-[300px]">
                        {!item.isActive ? (
                         <span className="text-muted-foreground italic">
-                           Excluido (Ver justificación en auditoría)
+                           Ver justificación en auditoría
                         </span>
                       ) : (
                         <span className="italic text-green-600/70">
@@ -243,10 +243,10 @@ export function ExclusionsPanel() {
                     <TableCell>
                       {!item.isActive ? (
                         <Badge
-                          variant="destructive"
-                          className="gap-1 text-[11px]"
+                          variant="secondary"
+                          className="gap-1 text-[11px] bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
                         >
-                          <FileX className="h-3 w-3" /> EXCLUIDO
+                          <FileX className="h-3 w-3" /> NO APLICA
                         </Badge>
                       ) : (
                         <Badge className="gap-1 text-[11px] bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
