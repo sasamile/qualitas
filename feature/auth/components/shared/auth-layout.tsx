@@ -46,11 +46,7 @@ export function AuthLayout({
         <CardContent className="space-y-4">{children}</CardContent>
 
         {/* Footer inside card or below */}
-        <div className="px-6 pb-6 pt-2 flex items-center justify-between text-xs text-slate-400">
-          <Link href="#" className="hover:text-slate-600 transition-colors">
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
+
       </Card>
 
       <Copyright />

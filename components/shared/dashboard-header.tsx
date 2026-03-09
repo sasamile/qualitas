@@ -3,17 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Search, Bell, ChevronRight } from "lucide-react";
+import { Menu, X, Search, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
+import { NotificationsPanel } from "@/components/notifications/notification-panel";
 
 interface DashboardHeaderProps {
   onMenuClick?: () => void;
   sidebarOpen?: boolean;
 }
 
-/** Jerarquía: Inicio > [Sección/Padre] > [Página actual]. Ej: Inicio > Administración > Usuarios */
+/** Jerarquía: Inicio > [Sección/Padre] > [Página actual]. */
 function getBreadcrumbs(pathname: string): { label: string; href?: string }[] {
   const crumbs: { label: string; href?: string }[] = [{ label: "Inicio", href: "/" }];
 
@@ -27,6 +27,7 @@ function getBreadcrumbs(pathname: string): { label: string; href?: string }[] {
     crumbs.push({ label: "Organización" });
   } else if (pathname.startsWith("/normatividad")) {
     crumbs.push({ label: "Normatividad" });
+
     if (pathname.includes("/marcos-normativos")) {
       crumbs.push({ label: "Marcos Normativos" });
     } else if (pathname.includes("/mipg")) {
@@ -39,19 +40,25 @@ function getBreadcrumbs(pathname: string): { label: string; href?: string }[] {
     crumbs.push({ label: "Auditoría" });
   } else {
     const segment = pathname.split("/").filter(Boolean)[0];
-    crumbs.push({ label: segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : "Página" });
+    crumbs.push({
+      label: segment
+        ? segment.charAt(0).toUpperCase() + segment.slice(1)
+        : "Página",
+    });
   }
 
   return crumbs;
 }
 
-export function DashboardHeader({ onMenuClick, sidebarOpen = true }: DashboardHeaderProps) {
+export function DashboardHeader({
+  onMenuClick,
+  sidebarOpen = true,
+}: DashboardHeaderProps) {
   const pathname = usePathname();
   const [cmdOpen, setCmdOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
   const crumbs = getBreadcrumbs(pathname);
 
-  // Cmd+K shortcut
+  // Shortcut Ctrl/Cmd + K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -59,6 +66,7 @@ export function DashboardHeader({ onMenuClick, sidebarOpen = true }: DashboardHe
         setCmdOpen((o) => !o);
       }
     };
+
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
@@ -72,14 +80,21 @@ export function DashboardHeader({ onMenuClick, sidebarOpen = true }: DashboardHe
           className="md:hidden h-8 w-8 text-muted-foreground"
           onClick={onMenuClick}
         >
-          {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {sidebarOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </Button>
 
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-0.5 flex-1 min-w-0">
           {crumbs.map((c, i) => (
             <span key={i} className="flex items-center gap-0.5">
-              {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />}
+              {i > 0 && (
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+              )}
+
               {c.href ? (
                 <Link
                   href={c.href}
@@ -90,7 +105,9 @@ export function DashboardHeader({ onMenuClick, sidebarOpen = true }: DashboardHe
               ) : (
                 <span
                   className={`text-[13px] whitespace-nowrap ${
-                    i === crumbs.length - 1 ? "text-foreground font-semibold" : "text-muted-foreground"
+                    i === crumbs.length - 1
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground"
                   }`}
                 >
                   {c.label}
@@ -108,8 +125,11 @@ export function DashboardHeader({ onMenuClick, sidebarOpen = true }: DashboardHe
           >
             <Search className="h-3.5 w-3.5" />
             <span>Buscar...</span>
-            <kbd className="text-[10px] font-mono bg-card border border-border rounded px-1 py-px">⌘K</kbd>
+            <kbd className="text-[10px] font-mono bg-card border border-border rounded px-1 py-px">
+              ⌘K
+            </kbd>
           </button>
+
           <Button
             variant="ghost"
             size="icon"
@@ -118,15 +138,9 @@ export function DashboardHeader({ onMenuClick, sidebarOpen = true }: DashboardHe
           >
             <Search className="h-[18px] w-[18px]" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-muted-foreground relative"
-            onClick={() => setNotifOpen(true)}
-          >
-            <Bell className="h-[18px] w-[18px]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
-          </Button>
+
+         
+          <NotificationsPanel />
         </div>
       </header>
 
