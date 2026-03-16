@@ -99,6 +99,7 @@ export function UserFormSheet({
           phoneNumber,
           organizationUnitId: organizationUnitId ?? null,
           positionId: positionId ?? null,
+          roleId: roleId ?? "",
         };
         await usersApi.updateAsAdmin(user.id, updatePayload);
 
@@ -138,6 +139,7 @@ export function UserFormSheet({
         phoneNumber,
         organizationUnitId: organizationUnitId ?? null,
         positionId: positionId ?? null,
+        roleId: roleId ?? "",
       };
       await usersApi.updateAsAdmin(newUserId, updatePayload);
 

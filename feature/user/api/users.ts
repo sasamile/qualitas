@@ -3,11 +3,21 @@ import type {
   PagedResponse,
   RegisterUserPayload,
   UpdateUserAdminPayload,
+  UpdateUserRequest,
   UserDto,
   UserSearchParams,
 } from "../types";
 
 export const usersApi = {
+  getProfile: async (): Promise<UserDto> => {
+    const { data } = await api.get<UserDto>("/api/v1/identity/profile");
+    return data;
+  },
+
+  updateProfile: async (payload: UpdateUserRequest): Promise<void> => {
+    await api.put("/api/v1/identity/profile", payload);
+  },
+
   search: async (
     params: UserSearchParams,
   ): Promise<PagedResponse<UserDto>> => {

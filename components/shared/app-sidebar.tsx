@@ -45,14 +45,14 @@ const navMainData = [
     icon: FileText,
     items: [
       { title: "Marcos Normativos", url: "/normatividad/marcos" },
-      { title: "Cumplimiento", url: "/normatividad/cumplimiento" },
     ],
   },
   {
     title: "Control",
-    url: "/auditoria",
+    url: "/",
     icon: Zap,
     items: [
+      { title: "Auditoría", url: "/auditoria" },
       { title: "Procesos", url: "/procesos" },
     ],
   },

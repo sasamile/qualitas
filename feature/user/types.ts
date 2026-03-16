@@ -70,27 +70,44 @@ export interface UserRoleDto {
 }
 
 export interface RegisterUserPayload {
+  userName: string;
   firstName: string;
   lastName: string;
   email: string;
-  userName: string;
-  password: string;
-  confirmPassword: string;
+  password?: string;
+  confirmPassword?: string;
   phoneNumber?: string;
+  roleId?: string;
+}
+
+export interface UpdateUserRequest {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string | null;
+  email: string | null;
+  image?: { fileName: string; contentType: string; data: number[] };
+  deleteCurrentImage?: boolean;
 }
 
 export interface UpdateUserAdminPayload {
   id: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  phoneNumber?: string | null;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string | null;
   email?: string | null;
   deleteCurrentImage?: boolean;
+  roleId: string;
   organizationId?: string | null;
   organizationUnitId?: string | null;
   positionId?: string | null;
   phoneNumberSecondary?: string | null;
   startDate?: string | null;
+}
+
+export interface ToggleUserStatusRequest {
+  activateUser: boolean;
+  userId: string | null;
 }
 
 export interface UserSessionDto {
@@ -116,4 +133,3 @@ export interface GroupDto {
   roleNames: string[];
   createdAt: string;
 }
-

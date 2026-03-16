@@ -10,6 +10,35 @@ export interface UserDto {
   imageUrl: string | null;
 }
 
+export interface UpdateUserRequest {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string | null;
+  email: string | null;
+  image?: { fileName: string; contentType: string; data: number[] };
+  deleteCurrentImage?: boolean;
+}
+
+export interface RegisterUserPayload {
+  userName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  confirmPassword?: string;
+  phoneNumber?: string;
+  roleId?: string;
+}
+
+export interface UpdateUserAdminPayload {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string | null;
+  roleId: string;
+}
+
 export interface PagedResponse<T> {
   items: T[];
   pageNumber: number;
