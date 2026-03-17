@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,16 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,7 +27,6 @@ import {
   useDofaAnalysesQuery,
   useDofaAnalysisQuery,
   useDofaCreateAnalysisMutation,
-  useDofaDeleteAnalysisMutation,
 } from "@/feature/management-dashboard/hooks/use-dofa";
 import { organizationsApi } from "@/feature/organization/api/organizations";
 
@@ -64,7 +53,6 @@ export default function TableroMandoIntegralPage() {
   const tenant = useAuthStore((s) => s.user?.tenant ?? "root");
   const analysesQuery = useDofaAnalysesQuery();
   const createAnalysisMutation = useDofaCreateAnalysisMutation();
-  const deleteAnalysisMutation = useDofaDeleteAnalysisMutation();
 
   const [organization, setOrganization] = useState<{
     id: string;
@@ -73,7 +61,6 @@ export default function TableroMandoIntegralPage() {
   const [isOrganizationLoading, setIsOrganizationLoading] = useState(true);
 
   const [analysisDialogOpen, setAnalysisDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analysisDraft, setAnalysisDraft] = useState<AnalysisDraft>({
     title: "",
     entityId: "",
@@ -171,7 +158,7 @@ export default function TableroMandoIntegralPage() {
     }
   };
 
-  const isBusy = createAnalysisMutation.isPending || deleteAnalysisMutation.isPending;
+  const isBusy = createAnalysisMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -251,16 +238,7 @@ export default function TableroMandoIntegralPage() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              {activeAnalysisId ? (
-                <Button
-                  variant="destructive"
-                  onClick={() => setDeleteDialogOpen(true)}
-                  disabled={isBusy}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Eliminar análisis
-                </Button>
-              ) : (
+              {!activeAnalysisId ? (
                 <Button
                   onClick={openCreateAnalysis}
                   disabled={isBusy || isOrganizationLoading || !organization?.id}
@@ -268,7 +246,7 @@ export default function TableroMandoIntegralPage() {
                   <Plus className="h-4 w-4 mr-2" />
                   Nuevo análisis
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
         </CardHeader>
@@ -424,30 +402,6 @@ export default function TableroMandoIntegralPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar análisis DOFA</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminará el análisis y todos sus ítems asociados.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isBusy}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isBusy || !activeAnalysisId}
-              onClick={async () => {
-                if (!activeAnalysisId) return;
-                const ok = await deleteAnalysisMutation.mutateAsync(activeAnalysisId);
-                if (ok) setDeleteDialogOpen(false);
-              }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
