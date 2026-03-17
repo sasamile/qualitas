@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,18 +11,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthStore } from "@/feature/auth/store/auth.store";
 import {
   DEFAULT_DOFA_CATEGORIES,
   DEFAULT_DOFA_PERSPECTIVES,
@@ -34,11 +37,12 @@ import {
   useDofaAnalysesQuery,
   useDofaAnalysisQuery,
   useDofaCreateAnalysisMutation,
+  useDofaDeleteAnalysisMutation,
 } from "@/feature/management-dashboard/hooks/use-dofa";
+import { organizationsApi } from "@/feature/organization/api/organizations";
 
 type AnalysisDraft = {
   title: string;
-  entityType: string;
   entityId: string;
   period: string;
   description: string;
@@ -57,38 +61,70 @@ function uniqueOrdered(values: string[]) {
 }
 
 export default function TableroMandoIntegralPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryAnalysisId = searchParams.get("analysisId") ?? "";
-
+  const tenant = useAuthStore((s) => s.user?.tenant ?? "root");
   const analysesQuery = useDofaAnalysesQuery();
   const createAnalysisMutation = useDofaCreateAnalysisMutation();
+  const deleteAnalysisMutation = useDofaDeleteAnalysisMutation();
 
-  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>(
-    queryAnalysisId,
-  );
-  const analysisQuery = useDofaAnalysisQuery(selectedAnalysisId || undefined);
+  const [organization, setOrganization] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isOrganizationLoading, setIsOrganizationLoading] = useState(true);
 
   const [analysisDialogOpen, setAnalysisDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analysisDraft, setAnalysisDraft] = useState<AnalysisDraft>({
     title: "",
-    entityType: "Organization",
     entityId: "",
     period: new Date().getFullYear().toString(),
     description: "",
   });
 
-  useEffect(() => {
-    if (queryAnalysisId && queryAnalysisId !== selectedAnalysisId) {
-      setSelectedAnalysisId(queryAnalysisId);
-    }
-  }, [queryAnalysisId, selectedAnalysisId]);
+  const analysesForOrganization = useMemo(() => {
+    const list = analysesQuery.data ?? [];
+    const orgId = organization?.id;
+    if (!orgId) return list;
+    const hasEntityInfo = list.some((a) => a.entityId || a.entityType);
+    if (!hasEntityInfo) return list;
+    return list.filter((a) => {
+      const type = (a.entityType ?? "").toLowerCase();
+      return type === "organization".toLowerCase() && a.entityId === orgId;
+    });
+  }, [analysesQuery.data, organization?.id]);
+
+  const activeAnalysisId = analysesForOrganization[0]?.id ?? "";
+  const analysisQuery = useDofaAnalysisQuery(activeAnalysisId || undefined);
 
   useEffect(() => {
-    if (selectedAnalysisId) return;
-    const first = analysesQuery.data?.[0]?.id;
-    if (first) setSelectedAnalysisId(first);
-  }, [analysesQuery.data, selectedAnalysisId]);
+    let cancelled = false;
+
+    const loadOrganization = async () => {
+      setIsOrganizationLoading(true);
+      try {
+        const list = await organizationsApi.list();
+        const matched = list.find((o) => o.code === tenant) ?? list[0] ?? null;
+        if (cancelled) return;
+        if (!matched) {
+          setOrganization(null);
+          return;
+        }
+        setOrganization({ id: matched.id, name: matched.name });
+        setAnalysisDraft((d) => ({
+          ...d,
+          entityId: d.entityId || matched.id,
+        }));
+      } finally {
+        if (!cancelled) setIsOrganizationLoading(false);
+      }
+    };
+
+    loadOrganization();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant]);
 
   const perspectives = useMemo(() => {
     const fromItems =
@@ -107,18 +143,10 @@ export default function TableroMandoIntegralPage() {
     ]);
   }, [analysisQuery.data]);
 
-  const syncUrl = (analysisId: string) => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (analysisId) next.set("analysisId", analysisId);
-    else next.delete("analysisId");
-    router.replace(`/tablero-mando-integral?${next.toString()}`);
-  };
-
   const openCreateAnalysis = () => {
     setAnalysisDraft({
       title: "",
-      entityType: "Organization",
-      entityId: "",
+      entityId: organization?.id ?? "",
       period: new Date().getFullYear().toString(),
       description: "",
     });
@@ -127,10 +155,11 @@ export default function TableroMandoIntegralPage() {
 
   const submitCreateAnalysis = async (e: FormEvent) => {
     e.preventDefault();
+    const entityId = organization?.id ?? analysisDraft.entityId.trim();
     const payload: CreateDofaAnalysisCommand = {
       title: analysisDraft.title.trim(),
-      entityType: analysisDraft.entityType.trim(),
-      entityId: analysisDraft.entityId.trim(),
+      entityType: "Organization",
+      entityId,
       period: analysisDraft.period.trim() || null,
       description: analysisDraft.description.trim() || null,
     };
@@ -139,12 +168,10 @@ export default function TableroMandoIntegralPage() {
     const created = await createAnalysisMutation.mutateAsync(payload);
     if (created?.id) {
       setAnalysisDialogOpen(false);
-      setSelectedAnalysisId(created.id);
-      syncUrl(created.id);
     }
   };
 
-  const isBusy = createAnalysisMutation.isPending;
+  const isBusy = createAnalysisMutation.isPending || deleteAnalysisMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -224,31 +251,24 @@ export default function TableroMandoIntegralPage() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <div className="min-w-[280px]">
-                <Select
-                  value={selectedAnalysisId}
-                  onValueChange={(value) => {
-                    setSelectedAnalysisId(value);
-                    syncUrl(value);
-                  }}
+              {activeAnalysisId ? (
+                <Button
+                  variant="destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  disabled={isBusy}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un análisis DOFA" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(analysesQuery.data ?? []).map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.title}
-                        {a.period ? ` (${a.period})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={openCreateAnalysis} disabled={isBusy}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo análisis
-              </Button>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Eliminar análisis
+                </Button>
+              ) : (
+                <Button
+                  onClick={openCreateAnalysis}
+                  disabled={isBusy || isOrganizationLoading || !organization?.id}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo análisis
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -280,9 +300,9 @@ export default function TableroMandoIntegralPage() {
             </TabsList>
 
             <TabsContent value="dofa" className="mt-5">
-              {!selectedAnalysisId ? (
+              {!activeAnalysisId ? (
                 <div className="rounded-lg border bg-card p-10 text-center text-sm text-muted-foreground">
-                  Crea o selecciona un análisis para empezar a configurar la matriz.
+                  Crea un análisis DOFA para empezar a configurar la matriz.
                 </div>
               ) : analysisQuery.isLoading ? (
                 <div className="space-y-3">
@@ -340,7 +360,7 @@ export default function TableroMandoIntegralPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Periodo</Label>
                 <Input
@@ -352,26 +372,16 @@ export default function TableroMandoIntegralPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Entity Type</Label>
+                <Label>Organización</Label>
                 <Input
-                  value={analysisDraft.entityType}
-                  onChange={(e) =>
-                    setAnalysisDraft((d) => ({
-                      ...d,
-                      entityType: e.target.value,
-                    }))
+                  value={
+                    isOrganizationLoading
+                      ? "Cargando..."
+                      : organization
+                        ? organization.name
+                        : "Sin organización"
                   }
-                  placeholder="Organization"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Entity ID</Label>
-                <Input
-                  value={analysisDraft.entityId}
-                  onChange={(e) =>
-                    setAnalysisDraft((d) => ({ ...d, entityId: e.target.value }))
-                  }
-                  placeholder="UUID"
+                  disabled
                 />
               </div>
             </div>
@@ -405,8 +415,7 @@ export default function TableroMandoIntegralPage() {
                 disabled={
                   isBusy ||
                   !analysisDraft.title.trim() ||
-                  !analysisDraft.entityType.trim() ||
-                  !analysisDraft.entityId.trim()
+                  !organization?.id
                 }
               >
                 Crear
@@ -415,6 +424,30 @@ export default function TableroMandoIntegralPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar análisis DOFA</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará el análisis y todos sus ítems asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBusy}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isBusy || !activeAnalysisId}
+              onClick={async () => {
+                if (!activeAnalysisId) return;
+                const ok = await deleteAnalysisMutation.mutateAsync(activeAnalysisId);
+                if (ok) setDeleteDialogOpen(false);
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

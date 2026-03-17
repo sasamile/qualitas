@@ -205,3 +205,18 @@ export async function deactivateDofaItem(
     return false;
   }
 }
+
+export async function deleteDofaAnalysis(analysisId: string): Promise<boolean> {
+  try {
+    await api.delete(`${BASE}/${analysisId}`);
+    toast.success("Análisis DOFA eliminado");
+    return true;
+  } catch (error: unknown) {
+    console.error("Error deleting DOFA analysis:", error);
+    toast.error(
+      (error as { response?: { data?: { message?: string } } })?.response?.data
+        ?.message || "Error al eliminar el análisis DOFA",
+    );
+    return false;
+  }
+}

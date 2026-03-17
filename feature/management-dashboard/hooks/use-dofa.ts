@@ -5,6 +5,7 @@ import {
   createDofaAnalysis,
   createDofaItem,
   deactivateDofaItem,
+  deleteDofaAnalysis,
   getDofaAnalysisById,
   listDofaAnalyses,
   updateDofaItem,
@@ -45,6 +46,16 @@ export function useDofaCreateAnalysisMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateDofaAnalysisCommand) => createDofaAnalysis(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dofaKeys.all });
+    },
+  });
+}
+
+export function useDofaDeleteAnalysisMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (analysisId: string) => deleteDofaAnalysis(analysisId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dofaKeys.all });
     },
@@ -104,4 +115,3 @@ export function useDofaDeactivateItemMutation() {
     },
   });
 }
-
