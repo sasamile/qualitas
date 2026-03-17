@@ -17,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/roles", label: "Roles" },
   { href: "/grupos", label: "Grupos" },
   { href: "/organizacion", label: "Organización" },
+  { href: "/tablero-mando-integral", label: "Tablero de Mando Integral" },
 ];
 
 interface CommandPaletteProps {

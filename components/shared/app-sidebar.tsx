@@ -28,7 +28,10 @@ const navMainData = [
     title: "Inicio",
     url: "/",
     icon: LayoutDashboard,
-    items: [{ title: "Dashboard", url: "/" }],
+    items: [
+      { title: "Dashboard", url: "/" },
+      { title: "Tablero de Mando Integral", url: "/tablero-mando-integral" },
+    ],
   },
   {
     title: "Administración",
