@@ -45,10 +45,21 @@ export function DofaPerspectiveTabs({
 }: Props) {
   return (
     <Tabs defaultValue={perspectiveTabs[0]?.value ?? "financiera"}>
-      <TabsList className="flex flex-wrap">
+      <TabsList className="flex w-full justify-start overflow-x-auto flex-nowrap">
         {perspectiveTabs.map((t) => (
-          <TabsTrigger key={t.value} value={t.value}>
-            {t.label}
+          <TabsTrigger
+            key={t.value}
+            value={t.value}
+            className="shrink-0 px-2.5 text-xs sm:px-3 sm:text-sm"
+          >
+            {t.value === "cruce" ? (
+              <>
+                <span className="sm:hidden">Cruce</span>
+                <span className="hidden sm:inline">{t.label}</span>
+              </>
+            ) : (
+              t.label
+            )}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -81,13 +92,13 @@ export function DofaPerspectiveTabs({
                       {items.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-start gap-1 group text-sm"
+                          className="flex items-start gap-2 group text-sm"
                         >
-                          <span className="flex-1 cursor-pointer hover:underline leading-tight pt-0.5">
+                          <span className="flex-1 cursor-pointer hover:underline leading-tight pt-0.5 break-words">
                             • {item.description}
                           </span>
                           <button
-                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0 text-destructive"
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-7 w-7 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0 text-destructive"
                             onClick={async () => {
                               await onDeactivateItem({ analysisId, itemId: item.id });
                             }}

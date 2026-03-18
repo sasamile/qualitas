@@ -176,9 +176,9 @@ export function AnalisisDofa() {
     <div className="space-y-6">
       <DofaPageHeader />
 
-      <Card>
-        <CardContent>
-          <div className="mt-5">
+      <Card className="py-4 sm:py-6">
+        <CardContent className="px-3 sm:px-6">
+          <div className="mt-4 sm:mt-5">
             {isOrgLoading || analysesQuery.isLoading ? (
               <div className="space-y-3">
                 <Skeleton className="h-10 w-[40%]" />
@@ -210,11 +210,11 @@ export function AnalisisDofa() {
             ) : (
               <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-                  <div>
-                    <div className="text-lg font-semibold text-foreground">
+                  <div className="min-w-0">
+                    <div className="text-base sm:text-lg font-semibold text-foreground break-words">
                       {analysisQuery.data.title}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground break-words">
                       {analysisQuery.data.description || "Sin descripción"}
                     </div>
                   </div>
