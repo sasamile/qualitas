@@ -35,7 +35,7 @@ const navMainData = [
   },
   {
     title: "Planificación",
-    url: "/analisis-dofa",
+    url: "/planificacion/analisis-dofa",
     icon: Calendar,
     items: [
       { title: "Análisis DOFA", url: "/planificacion/analisis-dofa" },
