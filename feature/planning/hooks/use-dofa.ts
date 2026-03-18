@@ -30,9 +30,7 @@ export function useDofaAnalysesQuery() {
 
 export function useDofaAnalysisQuery(analysisId?: string) {
   return useQuery({
-    queryKey: analysisId
-      ? dofaKeys.detail(analysisId)
-      : dofaKeys.detail("__none__"),
+    queryKey: analysisId ? dofaKeys.detail(analysisId) : dofaKeys.detail("__none__"),
     queryFn: async () => {
       if (!analysisId) return null;
       return getDofaAnalysisById(analysisId);

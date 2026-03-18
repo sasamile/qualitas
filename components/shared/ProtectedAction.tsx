@@ -59,9 +59,9 @@ export function ProtectedAction({
 }: ProtectedActionProps): ReactNode {
   const permissions = Array.isArray(permission) ? permission : [permission];
 
-  const hasPermission = requireAll
-    ? useHasAllPermissions(...permissions)
-    : useHasAnyPermission(...permissions);
+  const hasAllPermissions = useHasAllPermissions(...permissions);
+  const hasAnyPermission = useHasAnyPermission(...permissions);
+  const hasPermission = requireAll ? hasAllPermissions : hasAnyPermission;
 
   return hasPermission ? children : fallback;
 }

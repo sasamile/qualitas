@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+  Calendar,
   LayoutDashboard,
   Users,
   FileText,
@@ -30,7 +31,14 @@ const navMainData = [
     icon: LayoutDashboard,
     items: [
       { title: "Dashboard", url: "/" },
-      { title: "Tablero de Mando Integral", url: "/tablero-mando-integral" },
+    ],
+  },
+  {
+    title: "Planificación",
+    url: "/analisis-dofa",
+    icon: Calendar,
+    items: [
+      { title: "Análisis DOFA", url: "/planificacion/analisis-dofa" },
     ],
   },
   {

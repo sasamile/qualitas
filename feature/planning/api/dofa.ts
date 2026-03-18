@@ -6,6 +6,7 @@ export const DEFAULT_DOFA_PERSPECTIVES = [
   "Cliente",
   "ProcesosInternos",
   "AprendizajeYCrecimiento",
+  "CruceEstrategico",
 ] as const;
 
 export const DEFAULT_DOFA_CATEGORIES = [
@@ -205,3 +206,4 @@ export async function deactivateDofaItem(
     return false;
   }
 }
+
