@@ -40,9 +40,9 @@ function getBreadcrumbs(pathname: string): { label: string; href?: string }[] {
   } else if (pathname.startsWith("/procesos")) {
     crumbs.push({ label: "Control" });
     crumbs.push({ label: "Procesos" });
-  } else if (pathname.startsWith("/tablero-mando-integral")) {
+  } else if (pathname.startsWith("/analisis-dofa")) {
     crumbs.push({ label: "Control" });
-    crumbs.push({ label: "Tablero de Mando Integral" });
+    crumbs.push({ label: "Análisis DOFA" });
   } else if (pathname.startsWith("/normatividad")) {
     crumbs.push({ label: "Normatividad" });
     if (pathname.includes("/marcos")) {

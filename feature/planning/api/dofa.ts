@@ -6,6 +6,7 @@ export const DEFAULT_DOFA_PERSPECTIVES = [
   "Cliente",
   "ProcesosInternos",
   "AprendizajeYCrecimiento",
+  "CruceEstrategico",
 ] as const;
 
 export const DEFAULT_DOFA_CATEGORIES = [
@@ -206,17 +207,3 @@ export async function deactivateDofaItem(
   }
 }
 
-export async function deleteDofaAnalysis(analysisId: string): Promise<boolean> {
-  try {
-    await api.delete(`${BASE}/${analysisId}`);
-    toast.success("Análisis DOFA eliminado");
-    return true;
-  } catch (error: unknown) {
-    console.error("Error deleting DOFA analysis:", error);
-    toast.error(
-      (error as { response?: { data?: { message?: string } } })?.response?.data
-        ?.message || "Error al eliminar el análisis DOFA",
-    );
-    return false;
-  }
-}

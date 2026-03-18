@@ -17,7 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/roles", label: "Roles" },
   { href: "/grupos", label: "Grupos" },
   { href: "/organizacion", label: "Organización" },
-  { href: "/tablero-mando-integral", label: "Tablero de Mando Integral" },
+  { href: "/analisis-dofa", label: "Análisis DOFA" },
 ];
 
 interface CommandPaletteProps {
@@ -127,7 +127,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           })}
           {filtered.length === 0 && (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              Sin resultados para "{query}"
+              Sin resultados para “{query}”
             </div>
           )}
         </div>
