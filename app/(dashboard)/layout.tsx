@@ -43,7 +43,11 @@ function getBreadcrumbs(pathname: string): { label: string; href?: string }[] {
   } else if (pathname.startsWith("/planificacion/analisis-dofa")) {
     crumbs.push({ label: "Control" });
     crumbs.push({ label: "Análisis DOFA" });
-  } else if (pathname.startsWith("/normatividad")) {
+  } else if (pathname.startsWith("/planificacion/partes-interesadas")) {
+    crumbs.push({ label: "Control" });
+    crumbs.push({ label: "Partes Interesadas" });
+  }
+    else if (pathname.startsWith("/normatividad")) {
     crumbs.push({ label: "Normatividad" });
     if (pathname.includes("/marcos")) {
       crumbs.push({ label: "Marcos Normativos" });

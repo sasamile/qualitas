@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/grupos", label: "Grupos" },
   { href: "/organizacion", label: "Organización" },
   { href: "/planificacion/analisis-dofa", label: "Análisis DOFA" },
+  { href: "/planificacion/partes-interesadas", label: "Partes Interesadas" },
 ];
 
 interface CommandPaletteProps {
